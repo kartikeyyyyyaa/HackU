@@ -1,0 +1,59 @@
+{
+  "models": {
+    "A. OLS Tier-1 (no forward weather)": {
+      "MAPE": 6.307502080442262,
+      "MAE": 341.8264524401425,
+      "RMSE": 475.04511884397596,
+      "PeakMAPE": 7.4211635818158195,
+      "HeatMAPE": 6.246239583178767,
+      "DailyPeakMAPE": 5.72365289201361,
+      "KnownPeak_pred": 7598.877637134315,
+      "KnownPeak_err_MW": -793.7223628656857,
+      "KnownPeak_err_pct": -9.457407273856559,
+      "n_under_5": 31,
+      "n_under_10": 7,
+      "n_days": 61,
+      "MaxUnder_MW": 2375.996266308938
+    },
+    "B. OLS + 24h FORECAST temperature": {
+      "MAPE": 6.234056344177221,
+      "MAE": 341.120727227482,
+      "RMSE": 469.19630106512926,
+      "PeakMAPE": 7.702103727560032,
+      "HeatMAPE": 6.745841780041268,
+      "DailyPeakMAPE": 6.051662233668212,
+      "KnownPeak_pred": 7467.611854993365,
+      "KnownPeak_err_MW": -924.988145006635,
+      "KnownPeak_err_pct": -11.021473023933405,
+      "n_under_5": 31,
+      "n_under_10": 8,
+      "n_days": 61,
+      "MaxUnder_MW": 2381.286748196866
+    }
+  },
+  "reference_not_operational": {
+    "REF. OLS + observed future temp (not operational)": {
+      "MAPE": 5.4657643046721205,
+      "MAE": 299.15880172152526,
+      "RMSE": 423.6385939035847,
+      "PeakMAPE": 6.595889534622125,
+      "HeatMAPE": 5.789389594840756,
+      "DailyPeakMAPE": 5.0800210598513225,
+      "KnownPeak_pred": 7618.772283654929,
+      "KnownPeak_err_MW": -773.8277163450712,
+      "KnownPeak_err_pct": -9.220357414210985,
+      "n_under_5": 26,
+      "n_under_10": 4,
+      "n_days": 61,
+      "MaxUnder_MW": 2305.7255650893885
+    }
+  },
+  "temp_forecast_quality": {
+    "test_MAE_C": 1.805303421007392,
+    "test_bias_C": -0.7784682826199072,
+    "test_worst_C": 8.100000000000001
+  },
+  "train_rows": 69148,
+  "test_rows": 5817,
+  "test_max_MW": 8392.566666666668
+}

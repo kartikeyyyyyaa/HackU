@@ -1,0 +1,72 @@
+PHASE 5 -- WEATHER FORECAST BIAS CORRECTION
+================================================================================================
+
+WEATHER-SIDE: CANDIDATE SELECTION ON TRAINING-PERIOD EVIDENCE ONLY
+------------------------------------------------------------------------------------------------
+candidate                                       MAE    RMSE    bias   worst   hotMAE  hotBias
+------------------------------------------------------------------------------------------------
+raw forecast                                   2.60    3.53   +1.70   12.60     2.16    +1.02
+C1 constant bias (static, train-fitted)        2.49    3.09   -0.07   10.83     2.24    -0.75
+C2 month bias (static, train-fitted)           2.29    2.83   -0.08   10.37     2.45    -1.41
+C3 rolling 30d bias (adaptive)                 1.49    1.92   -0.11   10.22     1.48    +0.16
+C4 rolling 30d bias by hour (adaptive)         1.21    1.64   -0.10   10.40     1.17    +0.15
+C5 linear regression (static, train-fitted)    2.26    2.79   -0.06   10.09     2.88    -2.24
+------------------------------------------------------------------------------------------------
+SELECTED on training MAE (test never consulted): C4 rolling 30d bias by hour (adaptive)
+
+WEATHER-SIDE: HELD-OUT TEST PERIOD (1 May - 30 Jun 2025)
+------------------------------------------------------------------------------------------------
+candidate                                       MAE    RMSE    bias   worst   hotMAE  hotBias
+------------------------------------------------------------------------------------------------
+raw forecast                                   1.81    2.25   -0.78    8.10     2.14    -1.98
+C1 constant bias (static, train-fitted)        2.81    3.31   -2.55    9.87     3.75    -3.75
+C2 month bias (static, train-fitted)           3.67    4.11   -3.52   10.62     4.69    -4.69
+C3 rolling 30d bias (adaptive)                 1.68    2.16   +0.32    9.75     1.44    -0.89
+C4 rolling 30d bias by hour (adaptive)         1.56    2.08   +0.31   10.72     1.34    -0.87  <- selected
+C5 linear regression (static, train-fitted)    3.39    3.81   -3.19    8.60     4.80    -4.80
+------------------------------------------------------------------------------------------------
+
+PRE-FLIGHT (before any demand metric)
+------------------------------------------------------------------------------------------------
+  peak 2025-06-12 23:00:00 present : YES, 8,392.6 MW (MATCH)
+  test max demand              : 8,392.6 MW
+  test range                   : 2025-05-01 00:00:00 -> 2025-06-30 23:45:00
+  train rows / test rows       : 69,148 / 5,817
+  peak threshold P90           : 6,786.8 MW (582 blocks)
+  heatwave days (obs Tmax>=40C): 18 days, 1,689 blocks (definition unchanged)
+
+DEMAND RESULTS -- identical rows, target, horizon and metric definitions
+------------------------------------------------------------------------------------------------
+Model                                    MAPE     MAE    RMSE  PeakMAPE  HeatMAPE  DailyPk
+------------------------------------------------------------------------------------------------
+A. no forward weather                   6.31%   341.8   475.0     7.42%     6.25%    5.72%
+B. raw forecast temp                    6.23%   341.1   469.2     7.70%     6.75%    6.05%
+C. bias-corrected forecast temp         6.01%   326.3   458.3     6.98%     6.22%    5.45%
+D. observed future temp (REFERENCE)     5.47%   299.2   423.6     6.60%     5.79%    5.08%
+------------------------------------------------------------------------------------------------
+Model                                     Err@8392.6   >5% under  >10% under   MaxUnder
+------------------------------------------------------------------------------------------------
+A. no forward weather                    -793.7 MW      31/61        7/61      2376.0
+B. raw forecast temp                     -925.0 MW      31/61        8/61      2381.3
+C. bias-corrected forecast temp          -873.2 MW      26/61        6/61      2365.0
+D. observed future temp (REFERENCE)      -773.8 MW      26/61        4/61      2305.7
+------------------------------------------------------------------------------------------------
+
+CHANGES vs the locked baseline A (positive = better)
+------------------------------------------------------------------------------------------------
+  overall MAPE           A   6.31%   B   6.23% (+0.07)   C   6.01% (+0.29)   D(ref)   5.47% (+0.84)
+  peak-period MAPE       A   7.42%   B   7.70% (-0.28)   C   6.98% (+0.44)   D(ref)   6.60% (+0.83)
+  heatwave MAPE          A   6.25%   B   6.75% (-0.50)   C   6.22% (+0.03)   D(ref)   5.79% (+0.46)
+  daily-peak MAPE        A   5.72%   B   6.05% (-0.33)   C   5.45% (+0.27)   D(ref)   5.08% (+0.64)
+  peaks missed >10%      A 7/61   B 8/61   C 6/61   D(ref) 4/61
+  error @ 8,392.6 MW     A -793.7   B -925.0   C -873.2   D(ref) -773.8
+
+HEATWAVE DETAIL -- 11-13 June 2025, daily peak blocks
+------------------------------------------------------------------------------------------------
+timestamp               obsT   rawT  corrT    actual        A        B        C
+------------------------------------------------------------------------------------------------
+2025-06-11 22:45:00     34.4   32.1   32.8     8,181    5,805    5,799    5,821
+2025-06-12 23:00:00     34.7   32.2   33.0     8,393    7,599    7,468    7,519
+2025-06-13 14:45:00     40.2   38.4   39.9     8,389    7,781    7,716    7,743
+------------------------------------------------------------------------------------------------
+the season peak 2025-06-12 23:00:00: observed 34.7C, raw forecast 32.2C, corrected 33.0C

@@ -1,0 +1,14 @@
+PHASE 1d -- CORRECTED: genuine 24h-ahead forecast (no near-term leakage)
+==============================================================================
+[CONFIRMED] Train: before 2025-05-01 (70,330 blocks) | Test: 2025-05-01 to 2025-06-30 (5,739 blocks, summer peak season)
+
+[CONFIRMED] Naive baseline (same block, 7 days ago -- also a legitimate >=24h-ahead-available baseline): MAPE = 12.91%
+[CONFIRMED] Corrected 24h-ahead model (calendar + 24h-ago + 7d-ago + temperature, NO near-term leak): MAPE = 5.94%
+[CONFIRMED] Improvement over naive: +6.97 pp MAPE
+
+[ASSUMPTION] Temperature at target time is treated as a perfect 24h-ahead forecast (we used real observed
+             temperature, not a real weather forecast with its own error). This is standard practice for a
+             prototype but should be disclosed as such, not presented as production-grade weather-forecast accuracy.
+
+[CONFIRMED] Highest actual demand block: 2025-06-12 23:00:00 -> 8392.6 MW
+[CONFIRMED] Corrected model's 24h-ahead prediction for that block: 7751.8 MW (error: -640.8 MW, 7.64%)

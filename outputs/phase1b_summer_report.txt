@@ -1,0 +1,7 @@
+PHASE 1b -- summer-specific validation (real peak-demand season)
+==============================================================================
+[CONFIRMED] Train: before 2025-05-01 (70,176 blocks) | Test: 2025-05-01 to 2025-06-30 (5,738 blocks, real summer peak season)
+[CONFIRMED] Naive baseline (same block last week): MAPE = 12.90%
+[CONFIRMED] Phase-1 OLS model (no weather):        MAPE = 1.12%
+[CONFIRMED] Highest actual demand block in this summer window: 2025-06-12 23:00:00 -> 8392.6 MW
+[CONFIRMED] Model's prediction for that exact block: 8281.6 MW  (error: -111.0 MW, 1.32%)

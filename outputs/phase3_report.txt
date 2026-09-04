@@ -1,0 +1,84 @@
+PHASE 3 -- QUANTIFIED UNCERTAINTY (P10 / P50 / P90)
+============================================================================================
+
+PRE-FLIGHT (before any metric)
+--------------------------------------------------------------------------------------------
+  peak 2025-06-12 23:00:00 in test  : YES, 8,392.6 MW (MATCH)
+  train rows / test rows          : 70,914 / 5,817
+  test range                      : 2025-05-01 00:00:00 -> 2025-06-30 23:45:00
+  test max demand                 : 8,392.6 MW
+  features                        : TIER 1 only (21 features), unchanged from approved set
+
+METRIC DEFINITIONS (fixed in advance)
+--------------------------------------------------------------------------------------------
+  nominal interval        : P10-P90, so nominal coverage = 80%, nominal upper breach = 10%, nominal lower breach = 10%
+  high-demand period      : actual >= P90 of actual in test = 6,786.8 MW (582 of 5,817 blocks)
+  daily peaks             : highest-actual block of each of the 61 test days
+  interval width          : P90 - P10, in MW and as % of actual
+  pinball loss            : mean rho_tau(actual - quantile), lower is better (proper score)
+  band 'expands' if       : mean width on high-demand blocks > mean width off-peak
+
+OUT-OF-FOLD RESIDUAL GENERATION (expanding window, time-ordered, test never touched)
+--------------------------------------------------------------------------------------------
+  minimum training history per calibration fold : 12 months
+  calibration period                            : 2024-04-15 00:00:00 -> 2025-04-30 23:45:00 (36,262 rows)
+  fold 1: fit 2023-04-15..2024-04-14 (34,652 rows) -> predict 2024-04-15..2024-07-19 (9,065 rows), MAE 281.8 MW
+  fold 2: fit 2023-04-15..2024-07-19 (43,717 rows) -> predict 2024-07-19..2024-10-22 (9,066 rows), MAE 273.9 MW
+  fold 3: fit 2023-04-15..2024-10-22 (52,783 rows) -> predict 2024-10-22..2025-01-26 (9,065 rows), MAE 153.9 MW
+  fold 4: fit 2023-04-15..2025-01-26 (61,848 rows) -> predict 2025-01-26..2025-04-30 (9,066 rows), MAE 160.1 MW
+  total out-of-fold residual rows : 36,262  (mean +31.9 MW, sd 298.3 MW)
+  spread conditioned on           : ['pred', 'sin_hod', 'cos_hod', 'is_weekend', 'temp_at_issue', 'temp_prevday_max', 'roll24_max']
+  (a small set on purpose -- we are modelling spread, not level; every one of these is Tier-1 safe)
+
+CALIBRATION SELF-CHECK on out-of-fold data (does the fitted quantile hit its nominal level?)
+  fraction below fitted P10 : 10.04%  (nominal 10%)
+  fraction below fitted P90 : 89.96%  (nominal 90%)
+
+POINT FORECAST (P50 = the approved OLS baseline, unchanged)
+--------------------------------------------------------------------------------------------
+  MAPE 6.33%   MAE 343.4 MW   RMSE 478.1 MW   Peak MAPE 7.47%
+  (identical to the approved Phase 2 baseline -- the band is added around it, not instead of it)
+
+INTERVAL METRICS
+--------------------------------------------------------------------------------------------
+Metric                                       Conditional     Fixed-width     Nominal
+--------------------------------------------------------------------------------------------
+P10-P90 coverage, all blocks                      72.86%          63.74%         80%
+coverage, high-demand blocks                      67.35%          40.38%         80%
+coverage, daily peak blocks                       75.41%          49.18%         80%
+upper breaches (actual > P90)                      9.83%          16.18%         10%
+lower breaches (actual < P10)                     17.31%          20.08%         10%
+mean interval width (MW)                           833.8           658.0            
+mean width as % of actual                         15.27%          12.37%            
+mean width, off-peak (MW)                          810.7           658.0            
+mean width, high-demand (MW)                      1041.2           658.0            
+pinball loss P10 (lower better)                   102.45          109.42            
+pinball loss P90 (lower better)                    76.31           80.91            
+--------------------------------------------------------------------------------------------
+Does the conditional band widen under high demand?  YES  (1041.2 MW vs 810.7 MW off-peak)
+
+EXTREME-PEAK ANALYSIS
+--------------------------------------------------------------------------------------------
+  Season peak 2025-06-12 23:00:00
+    actual :  8,392.6 MW
+    P10    :  7,105.6 MW
+    P50    :  7,601.9 MW   (error -790.7 MW, -9.42%)
+    P90    :  8,276.5 MW   (actual is ABOVE the P90 bound, exceeding it by 116.0 MW)
+
+  Daily peaks (61 days):
+    P50 underpredicts by >5%              : 30/61
+    P50 underpredicts by >10%             : 7/61
+    captured under P90 (all daily peaks)  : 48/61 (78.7%)
+    of the 30 peaks P50 missed by >5%, captured under P90 : 17/30 (56.7%)
+    of the 7 peaks P50 missed by >10%, captured under P90: 0/7 (0.0%)
+
+  Worst 8 daily peaks by P50 underprediction:
+    date            actual       P50       P90  P50 under  under P90?
+    2025-06-11      8,181     5,761     6,280      29.6%          NO
+    2025-05-18      6,816     5,718     6,259      16.1%          NO
+    2025-06-06      6,126     5,320     5,772      13.2%          NO
+    2025-05-13      6,333     5,612     6,095      11.4%          NO
+    2025-06-08      7,050     6,249     6,842      11.4%          NO
+    2025-06-23      7,475     6,648     7,213      11.1%          NO
+    2025-06-17      6,998     6,235     6,762      10.9%          NO
+    2025-05-10      5,489     4,958     5,420       9.7%          NO

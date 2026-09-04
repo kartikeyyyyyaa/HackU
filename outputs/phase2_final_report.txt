@@ -1,0 +1,51 @@
+PHASE 2 (FINAL) -- APPROVED MODEL EXPERIMENT: OLS vs XGBoost
+============================================================================================
+
+PRE-FLIGHT CHECKS (run before any model metric is calculated)
+--------------------------------------------------------------------------------------------
+  known peak 2025-06-12 23:00:00 present in test set : YES
+  its value in the test set                        : 8,392.6 MW (expected 8392.6) -> MATCH
+  test max demand                                  : 8,392.6 MW
+  training rows                                    : 70,914
+  testing rows                                     : 5,817
+  test date range                                  : 2025-05-01 00:00:00 -> 2025-06-30 23:45:00
+  train date range                                 : 2023-04-15 00:00:00 -> 2025-04-30 23:45:00
+  train max demand                                 : 8,581.6 MW (test peak is INSIDE the trained range)
+
+PEAK METHODOLOGY (fixed before fitting; identical for both models)
+--------------------------------------------------------------------------------------------
+  peak period  = actual demand >= P90 of ACTUAL in the test window = 6,786.8 MW  (582 of 5,817 blocks)
+  major peaks  = highest-actual block of each calendar day (61 days)
+  underpredict = (actual - predicted)/actual, positive means forecast too LOW
+
+PRIMARY RESULTS -- genuine 24h-ahead forecast, NO future weather
+--------------------------------------------------------------------------------------------
+Model                              MAPE     MAE    RMSE  PeakMAPE  Err@8392.6  MaxUnder
+--------------------------------------------------------------------------------------------
+Naive: same time yesterday        7.49%   402.4   565.6     6.90%     -214.8    2830.6
+Naive: same time last week       12.97%   725.3   890.0    19.22%    -2893.6    3812.4
+A. OLS (Tier 1)                   6.33%   343.4   478.1     7.47%     -790.7    2419.5
+B. XGBoost (Tier 1)               6.57%   357.9   479.1     8.43%    -1011.6    2090.6
+--------------------------------------------------------------------------------------------
+
+EXTREME-PEAK DETAIL (primary)
+--------------------------------------------------------------------------------------------
+Model                              PeakMAE  DailyPkMAPE   >5% under  >10% under  Err@peak %
+--------------------------------------------------------------------------------------------
+Naive: same time yesterday           504.8        6.24%      32/61        6/61       -2.56%
+Naive: same time last week          1416.6       15.61%      36/61       29/61      -34.48%
+A. OLS (Tier 1)                      549.8        5.76%      30/61        7/61       -9.42%
+B. XGBoost (Tier 1)                  620.9        6.21%      34/61        4/61      -12.05%
+--------------------------------------------------------------------------------------------
+
+GENERALIZATION CHECK -- ordinary days vs peak days (primary)
+--------------------------------------------------------------------------------------------
+  A. OLS (Tier 1)          off-peak MAPE 6.20%   peak MAPE 7.47%   overall 6.33%
+  B. XGBoost (Tier 1)      off-peak MAPE 6.37%   peak MAPE 8.43%   overall 6.57%
+
+SUPPLEMENTARY ONLY -- adds target-time OBSERVED temperature.
+This is an ASSUMPTION (a perfect 24h weather forecast we do not have), NOT the genuine
+forecast result, and must not be quoted as project accuracy.
+--------------------------------------------------------------------------------------------
+  A. OLS (Tier 2, assumed perfect temp fcst)     MAPE 5.49%   PeakMAPE 6.62%   Err@peak -9.24%
+  B. XGBoost (Tier 2, assumed perfect temp fcst) MAPE 5.98%   PeakMAPE 7.80%   Err@peak -12.66%

@@ -1,0 +1,246 @@
+PHASE 13 -- FINAL DASHBOARD
+====================================================================================================
+
+AMENDMENT NOTE (added after this report's original approval): the stress-score cross-lineage
+discrepancy disclosed in Section 11 below ("IMPORTANT FINDING FROM THIS INTEGRATION TESTING") has
+since been fixed and verified under an explicit authorization -- see
+phase13_consistency_fix_report.txt. This report's Section 11 text is left exactly as originally
+delivered, as the historical record of what was found and why it was not fixed at the time.
+
+## 1. Application structure
+
+Two files, both in HACKU/src/:
+
+  phase13_backend.py       Shared backend module. Consolidates the LOCKED pipeline and every
+                            downstream layer from Phase 7-12 (data loading, feature engineering,
+                            OLS point forecast, IRLS quantile regression + calibration, reliability
+                            rule, Grid Stress Score (Combined/"C" formulation), peak_risk_rule,
+                            DISCOM discom_estimate, day_state, recommend, replay (Proof Mode),
+                            apply_temp_delta / solar_profile_mw / run_scenario (What-If)) into ONE
+                            importable module. No Streamlit import here -- it is plain Python and
+                            was unit-tested standalone before the UI was built on top of it.
+
+  phase13_dashboard_app.py Streamlit application. Imports phase13_backend, builds it ONCE via
+                            st.cache_resource, and renders three tabs: OVERVIEW / WHAT-IF /
+                            PROOF MODE. Contains no forecasting, risk, or scenario math of its own
+                            -- every number displayed is read from a dict returned by
+                            day_state() / recommend() / replay() / run_scenario() /
+                            discom_estimate().
+
+  requirements_dashboard.txt   streamlit, plotly, pandas, numpy (versions pinned to >=).
+
+Every function inside phase13_backend.py that touches the forecasting model, uncertainty bands,
+reliability rule, Grid Stress Score weights, peak-risk thresholds, DISCOM ratios, or advisory rule
+table is a direct, unmodified carry-over from the phase script that locked it (see the module
+docstring for the exact per-function mapping). Nothing was retrained, and no threshold, weight, or
+formula was changed to make the dashboard look better. The one new piece of logic is
+discom_estimate() additionally reporting the NDMC+MES residual bucket's MW contribution for
+display (Section 5 below) -- it reuses the already-locked Phase 11 residual ratio; it does not
+derive a new ratio or invent a capacity.
+
+## 2. Main screen design (OVERVIEW tab)
+
+A day selector (any of the 61 test days, 2025-05-01 to 2025-06-30; defaults to 2025-06-12, the
+known season peak) drives everything below it via a single call to day_state(day):
+
+  - Top row: Peak (P50), Peak time, P90 (with % of assumed capacity), Grid Stress Score (with
+    level badge).
+  - Demand forecast chart (Section 3).
+  - Reliability panel: HIGH/MEDIUM/LOW badge + the actual backend reliability_reasons text.
+  - Peak risk panel: LOW/MODERATE/HIGH/CRITICAL badge + main numeric driver + the actual
+    peak_risk_reasons text.
+  - DISCOM panel: contribution vs relative stress table, MODELED ESTIMATE labeled.
+  - Advisory panel: the fired advisories from recommend(day_state), TRIGGER -> ADVISORY -> REASON.
+
+This matches the requested control-room layout in one screen, readable without excessive
+scrolling on a normal laptop display.
+
+## 3. Forecast visualization
+
+A Plotly chart shows the selected day plus 3 days of context before it and 1 day after (so a
+judge can see the trend into and out of the peak, not just an isolated day): Actual (dashed black
+line), P50 (solid indigo line), and the P10-P90 band as a shaded fill. The day's own peak
+timestamp is marked with a vertical line. The caption explicitly states what is being shown: the
+continuous per-block series across the test period, where every 15-min block already has its own
+genuine 24h-ahead forecast -- distinct from Proof Mode's "one forecast issued once, for the next
+24h" framing, which uses a different chart (Section 7). This distinction is stated in-app so the
+two chart types are never confused with each other.
+
+## 4. Reliability/risk presentation
+
+Reliability: badge colored green/amber/red for HIGH/MEDIUM/LOW, with the real reliability_reasons
+list printed underneath -- never generic text (e.g. actual text used: "48h demand input was
+reconstructed (telemetry gap on the preceding day)").
+
+Grid Risk: stress score + level badge, peak risk + level badge, and the main numeric trigger
+printed as text (e.g. "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the
+95% HIGH threshold)") -- never a bare color with no explanation. "Capacity assumption: 9,000 MW --
+ILLUSTRATIVE, not an official DISCOM/SLDC-declared limit." is shown as a caption directly under
+every panel that uses it (Overview top row, What-If metrics row).
+
+## 5. DISCOM presentation
+
+BRPL / BYPL / TPDDL / NDMC+MES (residual) shown as one table: modeled P50 MW, modeled P90 MW,
+contribution share, and relative stress (P50 vs the utility's own 2025 reference peak). All rows
+are captioned "MODELED ESTIMATE... never live feeder telemetry." NDMC+MES shows contribution only
+-- its relative-stress column reads "n/a (no individual reference)" rather than a invented number,
+because Phase 11 never established an individual reference peak for that combined bucket.
+Contribution and relative stress are never collapsed into a single "most stressed" label anywhere
+in the UI; the advisory panel names both separately by utility, exactly preserving the Phase 11/12
+finding that they can point to different DISCOMs (verified live in-app: 2025-06-13 shows BRPL as
+largest contributor at 44% share while BYPL shows the highest relative stress at 90%).
+
+## 6. What-If interface
+
+Its own tab. Controls: event-day selector (scenario window = the 24h ending at that day's own
+peak), a temperature slider (+-8.0C, the Phase 10 sanity bound, labeled MODEL-DRIVEN SCENARIO),
+and a solar checkbox + capacity slider (0-3000 MW, labeled ASSUMPTION-BASED SCENARIO). Both BASE
+and SCENARIO are computed by calling run_scenario() with temp_delta=0 (BASE) and the user's actual
+slider values (SCENARIO) -- the SAME fitted model closures (ols_full / q_lo_fn / q_hi_fn) are
+reused for both; nothing is retrained per Section 11's verification. Metrics shown side by side
+with deltas: P50 peak, P90, peak time, stress score, peak risk. A chart overlays BASE P50 (dotted
+grey), SCENARIO gross P50 pre-solar (dashed amber, shown only when solar is on), and SCENARIO net
+P50 (solid red) -- letting a judge see the duck-curve gap directly when solar is enabled. Any
+sanity-bound clamp (temperature or solar capacity out of range) is surfaced as an on-screen
+warning, not silently applied.
+
+## 7. Proof Mode interface
+
+Its own tab. Event selector offers the two events Phase 9 selected (PRIMARY: 2025-06-12 season
+peak; SECONDARY/FAILURE MODE: 2025-06-11, the worst genuine P90 breach in the test period) plus a
+"choose any other test day" option that runs the same genuine 24h-ahead replay for any of the 61
+days. The forecast (issued at T, using only information at-or-before T) is shown first: predicted
+peak, predicted peak time, P10/P90 at the predicted peak, reliability, peak risk with reasons, and
+stress score. The actual outcome is hidden behind a "Reveal actual outcome" toggle (default off)
+-- verified in Section 11 to not appear anywhere in the rendered page before the toggle is
+switched on. Once revealed: actual peak, actual peak time, value-to-value error, warning lead
+time, and an explicit INSIDE/OUTSIDE-the-band verdict (the secondary event is shown as an honest
+miss, not hidden or softened: "actual demand ... fell OUTSIDE the P10-P90 band (margin to P90:
+-246.8 MW)"). A chart shows the forecast band, actual demand, T, and the actual peak marked.
+
+## 8. Advisory presentation
+
+Both the Overview and What-If tabs render the SAME advisory_list() helper: each fired advisory
+from recommend() shown as CATEGORY / ADVISORY text / REASON, using only the locked vocabulary
+(consider / prepare / monitor / evaluate / investigate / issue advisory) -- verified by re-reading
+the RULES table imported from phase13_backend, which contains no operational-command verbs. No
+recommendation text is written in the UI layer; every advisory string originates in
+phase13_backend.recommend().
+
+## 9. Offline/demo mode
+
+There is no live network call anywhere in phase13_backend.py or phase13_dashboard_app.py (grep of
+the whole project confirms no requests/urllib/http(s):// calls in any phase script). All inputs
+are the three local CSVs already in HACKU/data/. This means there is no separate "live" path to
+fall back from -- the entire test period (2025-05-01 to 2025-06-30, 61 days, all already-computed
+from real saved model outputs) IS the offline/demo dataset, and it is what the app always uses.
+The app was also verified to survive being pointed at a missing data directory and at a corrupted
+CSV (Section 11) without crashing.
+
+## 10. Claims and labels
+
+  ILLUSTRATIVE CAPACITY  -- "Capacity assumption: 9,000 MW -- ILLUSTRATIVE..." caption, shown
+                            wherever a %-of-capacity figure appears (Overview, What-If).
+  MODELED ESTIMATE       -- shown on every DISCOM panel (Overview, What-If).
+  SCENARIO               -- "MODEL-DRIVEN SCENARIO" / "ASSUMPTION-BASED SCENARIO" labels next to
+                            the temperature and solar controls respectively.
+  HISTORICAL REPLAY      -- Proof Mode tab header and its "used only information at or before T"
+                            caption.
+  ASSUMPTION             -- solar profile caption ("half-sine daylight profile... not fitted from
+                            any data in this project").
+
+## 11. Run/test results
+
+All checks below were run against the actual app (streamlit.testing.v1.AppTest, which executes
+the real script and widget callbacks -- not a mock) plus a live `streamlit run` smoke test.
+
+  1. Backend build (data load + feature engineering + OLS fit + IRLS quantile fit + calibration):
+     4.4-4.5s, one time. Reproduces the exact locked numbers from every prior phase:
+     5,817 test blocks, known-peak P50 = 7,795.2 MW, P90 = 8,417.6 MW at 2025-06-12 23:00:00 --
+     bit-identical to Phase 7-12's own pre-flight checks.
+
+  2. Full-app initial render: 0 exceptions.
+
+  3. OVERVIEW day-selector interaction: switching from 2025-06-12 to 2025-05-05 and back changed
+     every displayed metric (Peak/Peak time/P90/Stress) and produced 0 exceptions on each rerun.
+
+  4. WHAT-IF verification that changing a variable genuinely changes the output: temperature
+     +5.0C on the 2025-06-12 event moved P50 peak 7,795 -> 8,051 MW and stress 64.9 -> 79.3
+     (MODERATE -> HIGH) -- these are the SAME numbers Phase 10 already reported for this exact
+     scenario, confirming the dashboard is calling the real recomputation path, not a lookup.
+     Enabling solar (1,500 MW assumed capacity) on the same event left the reported PEAK metrics
+     unchanged, because this event's peak falls at 23:00, after sunset -- this is the correct,
+     already-disclosed Phase 10 finding (solar cannot affect an after-dark peak), not a bug; the
+     chart's gross-vs-net lines still show the daytime effect.
+
+  5. PROOF MODE no-leakage-in-the-UI check: for both the PRIMARY and SECONDARY events, the string
+     "ACTUAL OUTCOME" was confirmed ABSENT from the rendered page before the reveal toggle was
+     switched on, and present only after. Reveal correctly showed the PRIMARY event's actual peak
+     inside the P10-P90 band (+25.0 MW margin to P90) and the SECONDARY event's actual peak
+     OUTSIDE the band (-246.8 MW margin) -- both match the Phase 9-approved numbers.
+
+  6. Error handling: pointing the app at a missing data directory produced a single st.error
+     message ("Missing required data file(s)...") and 0 unhandled exceptions. Pointing it at a
+     directory with a corrupted load_data.csv (unparseable timestamp column) produced a single
+     st.error message and 0 unhandled exceptions. In both cases no Python traceback reached the
+     rendered page.
+
+  7. No-retrain check: the first AppTest run (includes backend build) took 6.55s; five subsequent
+     widget interactions (day changes, temperature slider, solar toggle, event switch, "any other
+     day") completed in a combined 0.3s -- consistent with the model being fit exactly once and
+     every interaction only calling already-fitted closures.
+
+  8. Live server smoke test: `streamlit run phase13_dashboard_app.py` started cleanly; HTTP GET on
+     `/` returned 200, and Streamlit's own `/_stcore/health` endpoint returned 200.
+
+  9. Numeric-literal audit: grepped phase13_dashboard_app.py for hardcoded numbers; every match is
+     a UI constant (chart colors/sizes, slider min/max/step/default, or a date string used only as
+     a default selectbox index) -- no forecast, risk, or DISCOM figure is typed directly into the
+     UI layer.
+
+  IMPORTANT FINDING FROM THIS INTEGRATION TESTING (not previously visible, because no earlier
+  phase displayed these two code paths side by side): day_state() (Phase 7/8/12 lineage) and
+  replay()/run_scenario() (Phase 9/10 lineage) define the Grid Stress Score's "growth" component
+  against two DIFFERENT reference windows for "the prior period's peak" -- day_state uses the
+  full previous CALENDAR day, while replay/run_scenario use a 24h window ending exactly at the
+  forecast issue time T. Both formulas were independently locked and approved in their own phases
+  and are internally self-consistent (e.g. What-If's BASE-vs-SCENARIO deltas are unaffected, since
+  both sides of that comparison use the same window). But for the SAME calendar day, the two
+  groups can report different stress scores: scanned across all 61 test days, the scores differ by
+  up to 19.2 points, with 2 of 61 days (3.3%) crossing a stress-LEVEL boundary (NORMAL vs WATCH)
+  and 3 of 61 days (4.9%) crossing a peak-risk boundary (LOW vs MODERATE) between the two groups.
+  2025-06-12 itself (the flagship demo day) shows 62.4 (day_state/Overview) vs 64.9
+  (replay-run_scenario/What-If & Proof Mode) -- both land in WATCH/MODERATE, so this specific case
+  is not misleading, but a judge switching tabs on one of the 5 affected days would see two
+  different numbers for what looks like the same underlying day.
+
+  Per this phase's explicit instruction not to add new backend features or change any locked
+  formula without authorization, this was NOT silently fixed or reconciled -- doing so would also
+  retroactively affect numbers already reported and approved in the Phase 8/9/10/12 deliverables.
+  Instead: (a) it is disclosed here in full, with the exact magnitude and frequency; (b) the
+  dashboard itself carries an in-app "KNOWN ISSUE" caption on both the Overview and What-If tabs
+  so a judge encountering the discrepancy sees an explanation, not a silent contradiction. This is
+  a candidate item for an explicitly authorized future phase (e.g. "PHASE 14 -- reconcile the two
+  growth-window definitions"), not something resolved in this one.
+
+Verification checklist requested for this phase:
+  - All three views work: YES (Section 11.2-11.8).
+  - Every visible numerical value traces to a backend output: YES (Section 11.9; by construction,
+    every st.metric/st.write/table cell reads a dict field from day_state/recommend/replay/
+    run_scenario/discom_estimate).
+  - The model is NOT retrained during dashboard use: YES (Section 11.7; st.cache_resource + timing
+    evidence).
+  - Changing a What-If variable genuinely changes the scenario output: YES (Section 11.4).
+  - Proof Mode uses only historical issue-time information: YES by construction (replay() carries
+    the same formal no-leakage assertion approved in Phase 9: every target's 24h-ago feature
+    timestamp is checked <= T), and confirmed in the UI (Section 11.5: no leakage of the actual
+    outcome into the page before the reveal toggle).
+
+====================================================================================================
+STOP CONDITION
+====================================================================================================
+The dashboard is functional. No further features were added beyond what this phase's brief
+requested; the one disclosed cross-lineage inconsistency found during integration testing was
+surfaced, not silently patched, and is left for an explicitly authorized future phase.
+
+PHASE 13 COMPLETE -- WAITING FOR APPROVAL.

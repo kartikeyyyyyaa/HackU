@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "C:\Users\Kartikeya shukla\HACKU\_verify_env.py", line 1, in <module>
+    import streamlit
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\__init__.py", line 62, in <module>
+    from streamlit import config as _config
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\config.py", line 30, in <module>
+    from streamlit import config_util, development, env_util, file_util, util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\config_util.py", line 27, in <module>
+    from streamlit import cli_util, url_util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\cli_util.py", line 22, in <module>
+    from streamlit import env_util, errors
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\errors.py", line 22, in <module>
+    from streamlit import util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\util.py", line 24, in <module>
+    from streamlit.proto.RootContainer_pb2 import RootContainer
+ModuleNotFoundError: No module named 'streamlit.proto'
+    Found existing installation: altair 6.2.2
+    Uninstalling altair-6.2.2:
+      Successfully uninstalled altair-6.2.2
+

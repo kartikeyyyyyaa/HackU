@@ -1,0 +1,59 @@
+{
+  "band_current": {
+    "coverage_all": 72.78665979026991,
+    "coverage_peak": 62.02749140893471,
+    "coverage_dailypeak": 70.49180327868852,
+    "breach_upper": 13.701220560426336,
+    "breach_lower": 13.512119649303763,
+    "width_mean": 810.5089729008299,
+    "pinball_lo": 90.20693143405543,
+    "pinball_hi": 69.42695352144226,
+    "coverage_HIGH": 73.9528335093277,
+    "width_HIGH": 806.9296450878526,
+    "n_HIGH": 5682,
+    "coverage_MEDIUM": 12.5,
+    "width_MEDIUM": 952.5379968489915,
+    "n_MEDIUM": 96,
+    "coverage_LOW": 51.28205128205128,
+    "width_LOW": 982.37959685761,
+    "n_LOW": 39
+  },
+  "band_reliability_aware": {
+    "coverage_all": 73.11328863675433,
+    "coverage_peak": 64.7766323024055,
+    "coverage_dailypeak": 72.1311475409836,
+    "breach_upper": 13.374591713941895,
+    "breach_lower": 13.512119649303763,
+    "width_mean": 817.1481116209551,
+    "pinball_lo": 90.55864558894986,
+    "pinball_hi": 68.01230124996981,
+    "coverage_HIGH": 73.9528335093277,
+    "width_HIGH": 806.9296450878528,
+    "n_HIGH": 5682,
+    "coverage_MEDIUM": 29.166666666666668,
+    "width_MEDIUM": 1095.4186963763407,
+    "n_MEDIUM": 96,
+    "coverage_LOW": 58.97435897435898,
+    "width_LOW": 1620.9263348150573,
+    "n_LOW": 39
+  },
+  "width_factors": {
+    "HIGH": 1.0000000000000004,
+    "MEDIUM": 1.1500000000000006,
+    "LOW": 1.650000000000001
+  },
+  "assumed_capacity_mw": 9000.0,
+  "capacity_note": "ASSUMED / ILLUSTRATIVE ceiling, not an official or sourced figure. Chosen as a round value above the highest demand observed anywhere in our dataset (8,631.5 MW at 5-min resolution). It exists to demonstrate the index and MUST be replaced with a verified operational value before any external claim.",
+  "weights": {
+    "p50_util": 55,
+    "p90_util": 20,
+    "growth": 10,
+    "heat": 10,
+    "reliability": 5
+  },
+  "state_counts_test": {
+    "HIGH": 5682,
+    "MEDIUM": 96,
+    "LOW": 39
+  }
+}

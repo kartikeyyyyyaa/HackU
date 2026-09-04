@@ -1,0 +1,120 @@
+{
+  "formulations": {
+    "A_P50_DRIVEN": {
+      "w_p50": 55.0,
+      "w_p90": 20.0,
+      "label": "A -- P50-driven (current, Phase 7)"
+    },
+    "B_P90_DRIVEN": {
+      "w_p50": 20.0,
+      "w_p90": 55.0,
+      "label": "B -- P90-driven"
+    },
+    "C_COMBINED": {
+      "w_p50": 37.5,
+      "w_p90": 37.5,
+      "label": "C -- Combined (equal split)"
+    }
+  },
+  "shared_weights": {
+    "growth": 10,
+    "heat": 10,
+    "reliability": 5,
+    "utilisation_budget": 75
+  },
+  "assumed_capacity_mw": 9000.0,
+  "capacity_note": "ASSUMED / ILLUSTRATIVE ceiling, not an official or sourced figure. Chosen as a round value above the highest demand observed anywhere in our dataset (8,631.5 MW at 5-min resolution). It exists to demonstrate the index and MUST be replaced with a verified operational value before any external claim.",
+  "bands": {
+    "NORMAL": "0-50",
+    "WATCH": "50-75",
+    "HIGH": "75-90",
+    "CRITICAL": "90-100"
+  },
+  "evaluation_stats": {
+    "A_P50_DRIVEN": {
+      "pearson": 0.8047143199926036,
+      "spearman": 0.7964194610410164,
+      "false_alarm": 0.0,
+      "missed": 0.0,
+      "spread": 15.92766624187512,
+      "n_low": 46,
+      "n_high": 3
+    },
+    "B_P90_DRIVEN": {
+      "pearson": 0.8359896116991654,
+      "spearman": 0.8363323864581035,
+      "false_alarm": 2.1739130434782608,
+      "missed": 0.0,
+      "spread": 18.420981741101937,
+      "n_low": 46,
+      "n_high": 3
+    },
+    "C_COMBINED": {
+      "pearson": 0.8226191952329198,
+      "spearman": 0.8224079129358247,
+      "false_alarm": 0.0,
+      "missed": 0.0,
+      "spread": 17.154888739081734,
+      "n_low": 46,
+      "n_high": 3
+    }
+  },
+  "recommendation": "C_COMBINED",
+  "recommendation_caveat": "Under unchanged band thresholds, 12 and 13 June stay in WATCH under all three formulations (A/B/C) -- none reaches HIGH. C narrows but does not eliminate the understatement that triggered this review; closing it fully would require revisiting the WATCH/HIGH threshold or the 70-100% utilisation mapping, which was explicitly out of scope.",
+  "example_cards_2025_06_12": {
+    "A_P50_DRIVEN": {
+      "date": "2025-06-12",
+      "peak_time": "23:00",
+      "forecast_mw": 7795.2,
+      "p10_mw": 7150.8,
+      "p50_mw": 7795.2,
+      "p90_mw": 8417.6,
+      "reliability": "MEDIUM",
+      "reliability_reasons": [
+        "(see Part A/F of Phase 7 -- unchanged in this experiment)"
+      ],
+      "stress_score": 58.3,
+      "stress_level": "WATCH",
+      "peak_risk": "(unchanged, see Phase 7 Part E -- out of scope for this experiment)",
+      "peak_risk_reasons": [
+        "(unchanged, see Phase 7 Part E -- out of scope for this experiment)"
+      ]
+    },
+    "B_P90_DRIVEN": {
+      "date": "2025-06-12",
+      "peak_time": "23:00",
+      "forecast_mw": 7795.2,
+      "p10_mw": 7150.8,
+      "p50_mw": 7795.2,
+      "p90_mw": 8417.6,
+      "reliability": "MEDIUM",
+      "reliability_reasons": [
+        "(see Part A/F of Phase 7 -- unchanged in this experiment)"
+      ],
+      "stress_score": 66.4,
+      "stress_level": "WATCH",
+      "peak_risk": "(unchanged, see Phase 7 Part E -- out of scope for this experiment)",
+      "peak_risk_reasons": [
+        "(unchanged, see Phase 7 Part E -- out of scope for this experiment)"
+      ]
+    },
+    "C_COMBINED": {
+      "date": "2025-06-12",
+      "peak_time": "23:00",
+      "forecast_mw": 7795.2,
+      "p10_mw": 7150.8,
+      "p50_mw": 7795.2,
+      "p90_mw": 8417.6,
+      "reliability": "MEDIUM",
+      "reliability_reasons": [
+        "(see Part A/F of Phase 7 -- unchanged in this experiment)"
+      ],
+      "stress_score": 62.4,
+      "stress_level": "WATCH",
+      "peak_risk": "(unchanged, see Phase 7 Part E -- out of scope for this experiment)",
+      "peak_risk_reasons": [
+        "(unchanged, see Phase 7 Part E -- out of scope for this experiment)"
+      ]
+    }
+  }
+}

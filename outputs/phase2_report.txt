@@ -1,0 +1,50 @@
+PHASE 2 -- CONTROLLED MODEL IMPROVEMENT EXPERIMENT
+==============================================================================
+[CONFIRMED] Demand series: 97,728 15-min blocks, 2023-04-01 00:00:00 -> 2026-01-12 23:45:00
+[CONFIRMED] Weather series: 24,432 hourly readings (Open-Meteo, observed/reanalysis)
+[CONFIRMED] Blocks with no real observed demand after <=1h interpolation: 1,027 (1.05%) -- these are EXCLUDED from training targets and from all scoring
+[INFERENCE]  Those same blocks are imputed (seasonal-naive, same block previous week) ONLY where they appear inside lag/rolling FEATURE INPUTS, so that isolated gaps do not delete whole windows
+[CONFIRMED] Train: 2023-04-15 00:00:00 -> 2025-04-30 23:45:00  (70,914 blocks)
+[CONFIRMED] Test:  2025-05-01 00:00:00 -> 2025-06-30 23:45:00  (5,817 blocks)
+[CONFIRMED] Train max demand 8,581.6 MW | Test max demand 8,392.6 MW
+[CONFIRMED] Test peak is INSIDE the training range -- trees can only interpolate, so this matters.
+
+PEAK METHODOLOGY (defined before computing any result):
+  peak period    = blocks where ACTUAL demand >= P90 of actual in the test window = 6,786.8 MW (582 of 5,817 blocks)
+  major peaks    = the single highest-actual block of each calendar day (61 days)
+  underpredict %  = (actual - predicted) / actual * 100, positive = model too low
+
+RESULTS -- identical test window, identical rows, identical target
+------------------------------------------------------------------------------
+Model                                    MAPE     MAE    RMSE  PeakMAPE  MaxUnder
+------------------------------------------------------------------------------
+Baseline: same time yesterday           7.49%  402.4   565.6     6.90%   2830.6
+Baseline: same time last week          12.97%  725.3   890.0    19.22%   3812.4
+A. OLS (T1, no future weather)          6.33%  343.4   478.1     7.47%   2419.5
+B. LightGBM (T1, no future weather)     6.75%  365.9   485.9     8.07%   2179.5
+A. OLS (T2, +perfect temp fcst)         5.49%  300.4   426.5     6.62%   2340.5
+B. LightGBM (T2, +perfect temp fcst)    5.94%  325.5   447.6     7.83%   2224.4
+------------------------------------------------------------------------------
+
+EXTREME-PEAK ANALYSIS
+------------------------------------------------------------------------------
+Model                                  DailyPkMAPE  >5% under  >10% under  TopBlockErr
+------------------------------------------------------------------------------
+Baseline: same time yesterday                6.24%      32/61        6/61       -2.56%
+Baseline: same time last week               15.61%      36/61       29/61      -34.48%
+A. OLS (T1, no future weather)               5.76%      30/61        7/61       -9.42%
+B. LightGBM (T1, no future weather)          6.04%      31/61        3/61      -12.37%
+A. OLS (T2, +perfect temp fcst)              5.07%      25/61        4/61       -9.24%
+B. LightGBM (T2, +perfect temp fcst)         5.44%      25/61        5/61      -14.07%
+------------------------------------------------------------------------------
+
+GENERALIZATION CHECK -- does the tree model damage ordinary days?
+  A. OLS (T1, no future weather)         off-peak MAPE 6.20%   peak MAPE 7.47%
+  B. LightGBM (T1, no future weather)    off-peak MAPE 6.60%   peak MAPE 8.07%
+  A. OLS (T2, +perfect temp fcst)        off-peak MAPE 5.36%   peak MAPE 6.62%
+  B. LightGBM (T2, +perfect temp fcst)   off-peak MAPE 5.73%   peak MAPE 7.83%
+
+WEATHER-FORECAST-ERROR SENSITIVITY (sigma=1.5 degC, 20 seeds,
+trained on true weather, degraded only at inference -- ILLUSTRATIVE, not a measured forecast distribution)
+  A. OLS      T2 perfect 5.49% -> noisy 5.66%   (peak 6.62% -> 6.65%)
+  B. LightGBM T2 perfect 5.94% -> noisy 6.06%   (peak 7.83% -> 7.99%)

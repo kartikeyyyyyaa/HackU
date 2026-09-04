@@ -1,0 +1,135 @@
+{
+  "issue_time": "2025-06-11 23:00:00",
+  "base_case": {
+    "label": "BASE CASE (no scenario applied)",
+    "T": "2025-06-11 23:00:00",
+    "notes": [],
+    "peak_time": "2025-06-12 23:00:00",
+    "worst_reliability": "LOW",
+    "peak_mw": 7795.2,
+    "p90_mw": 8417.6,
+    "util50": 0.866128011435416,
+    "util90": 0.9352838977438757,
+    "stress_score": 64.9,
+    "stress_level": "WATCH",
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+      "forecast reliability is LOW, so the upper bound is less dependable"
+    ]
+  },
+  "scenarios": {
+    "temp_plus2": {
+      "label": "SCENARIO: temperature +2C",
+      "T": "2025-06-11 23:00:00",
+      "notes": [],
+      "peak_time": "2025-06-12 23:00:00",
+      "worst_reliability": "LOW",
+      "peak_mw": 7895.7,
+      "p90_mw": 8528.4,
+      "util50": 0.8773033198681649,
+      "util90": 0.9476030025803621,
+      "stress_score": 71.2,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "P90 reaches 95% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "temp_minus2": {
+      "label": "SCENARIO: temperature -2C",
+      "T": "2025-06-11 23:00:00",
+      "notes": [],
+      "peak_time": "2025-06-12 23:00:00",
+      "worst_reliability": "LOW",
+      "peak_mw": 7696.8,
+      "p90_mw": 8309.1,
+      "util50": 0.8551966575291189,
+      "util90": 0.9232337162578974,
+      "stress_score": 58.6,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "P90 reaches 92% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "temp_plus5": {
+      "label": "SCENARIO: temperature +5C",
+      "T": "2025-06-11 23:00:00",
+      "notes": [],
+      "peak_time": "2025-06-12 23:00:00",
+      "worst_reliability": "LOW",
+      "peak_mw": 8050.7,
+      "p90_mw": 8699.3,
+      "util50": 0.8945236972543855,
+      "util90": 0.9665858911172943,
+      "stress_score": 79.3,
+      "stress_level": "HIGH",
+      "peak_risk": "HIGH",
+      "peak_risk_reasons": [
+        "P90 reaches 97% of assumed capacity (>=95% threshold)",
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "solar_500mw_net": {
+      "label": "SCENARIO: +500 MW assumed rooftop solar (net demand)",
+      "T": "2025-06-11 23:00:00",
+      "notes": [],
+      "peak_time": "2025-06-12 23:00:00",
+      "worst_reliability": "LOW",
+      "peak_mw": 7795.2,
+      "p90_mw": 8417.6,
+      "util50": 0.866128011435416,
+      "util90": 0.9352838977438757,
+      "stress_score": 64.9,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "solar_1500mw_net": {
+      "label": "SCENARIO: +1500 MW assumed rooftop solar (net demand)",
+      "T": "2025-06-11 23:00:00",
+      "notes": [],
+      "peak_time": "2025-06-12 23:00:00",
+      "worst_reliability": "LOW",
+      "peak_mw": 7795.2,
+      "p90_mw": 8417.6,
+      "util50": 0.866128011435416,
+      "util90": 0.9352838977438757,
+      "stress_score": 64.9,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    }
+  },
+  "sanity_checks": {
+    "temp_plus2_raises_peak": true,
+    "temp_minus2_lowers_peak": true,
+    "temp_monotonic": true,
+    "net_le_gross_daylight": true,
+    "net_peak_le_gross_peak": true,
+    "night_unaffected": true,
+    "no_negative_net_demand": true,
+    "midday_net_below_gross": true,
+    "all_pass": true
+  },
+  "bounds": {
+    "temp_delta_max_abs_C": 8.0,
+    "temp_abs_range_C": [
+      5.0,
+      48.0
+    ],
+    "solar_capacity_range_MW": [
+      0.0,
+      3000.0
+    ]
+  }
+}

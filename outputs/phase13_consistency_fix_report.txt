@@ -1,0 +1,209 @@
+# PHASE 13 FIX -- STRESS SCORE CONSISTENCY
+====================================================================================================
+
+## 1. Root cause
+
+Two SEPARATE, independently-inconsistent computations fed the Grid Stress Score, not one. Both
+are fixed here; a third, DIFFERENT-IN-KIND issue was found and is documented but NOT fixed
+(Section 8) because fixing it is out of this task's authorized scope.
+
+  (a) GROWTH TERM reference window (the issue named in the authorization). day_state()
+      (Overview's code path, Phase 7/8/12 lineage) computed the growth component's "previous
+      peak" by looking up the PRECEDING CALENDAR DAY's max P50. replay() and run_scenario()
+      (Proof Mode / What-If, Phase 9/10 lineage) instead looked up the max P50 over a 24-HOUR
+      WINDOW ENDING EXACTLY AT the forecast issue time T. These are two different definitions of
+      "the prior period," computed independently in three separate places in the old
+      phase13_backend.py, with no shared function between them.
+
+  (b) RELIABILITY component scope (found while fixing (a), not previously disclosed). The SAME
+      pattern existed for the score's reliability penalty: day_state() computed "worst
+      reliability" across the PEAK'S OWN CALENDAR DAY (96 blocks), while replay()/run_scenario()
+      computed it across the 24h WINDOW ENDING AT T (which spans parts of two calendar days,
+      offset from a true calendar day by however many hours the peak sits before midnight). On
+      2025-06-12 specifically, the calendar day is 100% MEDIUM-reliability blocks (worst=MEDIUM),
+      but the window used by replay/run_scenario for the same event contains 3 LOW-reliability
+      blocks bleeding in from the tail of 2025-06-11 (worst=LOW) -- a full reliability-tier
+      difference, worth exactly 5 * (1.0-0.5) = 2.5 stress-score points on its own. This alone
+      accounts for the entire 62.4-vs-64.9 discrepancy reported on the flagship 2025-06-12 demo
+      day in the original Phase 13 report -- that specific case turned out to have NO growth-term
+      contribution at all; it was 100% a reliability-scope mismatch.
+
+  Both (a) and (b) are now resolved by two canonical lookup functions plus one canonical scoring
+  function (Section 2), so there is no longer any place where a growth reference or a
+  reliability-for-scoring value is computed independently of the others.
+
+## 2. Canonical implementation
+
+phase13_backend.py now defines exactly ONE function that computes the Grid Stress Score:
+
+  stress_score(p50, p90, temp_corr, reliability, prev_peak_p50) -> dict(stress_score,
+  stress_level, util50, util90, growth, c_p50, c_p90, c_growth, c_heat, c_rel)
+
+It is a pure function: same five inputs always produce the same five-component breakdown, the
+same weighted sum, and the same NORMAL/WATCH/HIGH/CRITICAL level. It contains the full formula
+(utilization mapping, growth clip, heat clip, reliability penalty, the locked Combined-formulation
+weights 37.5/37.5/10/10/5, and the level_of() thresholds) in ONE place -- nothing else in the
+module computes any part of this formula independently any more.
+
+Two canonical lookups feed it, both new, both used by every caller:
+
+  prev_calendar_day_p50_peak(res_df, ref_time)     -- the growth reference (Section 3)
+  canonical_worst_reliability(res_df, ref_time)     -- the reliability-for-scoring reference
+
+day_state(), replay(), and run_scenario() (via its internal _score_window()) now ALL: (1) look up
+their growth reference via prev_calendar_day_p50_peak(), (2) look up their scoring-reliability via
+canonical_worst_reliability(), both keyed off the SAME timestamp -- the forecast's own predicted
+peak time -- and (3) call stress_score() with those values. There is no second implementation of
+the weighted-sum formula, the growth lookup, or the reliability-for-scoring lookup anywhere in the
+file (verified: grepping the module for "W_P50_UTIL \*" -- the score's weighted-sum pattern --
+now matches exactly once, inside stress_score() itself).
+
+IMPORTANT SCOPE NOTE: replay() and run_scenario() still separately compute a WINDOW-scoped
+"worst reliability" for their own REPORTED reliability field, badge, peak_risk_rule input, and
+DATA QUALITY WARNING text -- unchanged from before this fix. That is intentional and required by
+this task's "Do NOT change ... reliability rules ... Proof Mode logic ... What-If logic" and "Do
+NOT change ... risk thresholds" instructions: peak_risk_rule's reliability input, and Proof Mode's
+own "here is the reliability state of the 24h window this forecast covers" narrative, are Phase
+9/10-approved behaviors that this task did not ask me to touch. Only the score's OWN internal
+reliability component was unified.
+
+## 3. Reference-window decision
+
+Inspected phase8_risk_design_experiment.py directly -- the phase that actually locked the
+Combined ("C") Grid Stress Score formulation, by evaluating it against realized outcomes across
+all 61 test days (correlation with actual utilization, false-alarm rate, missed-flag rate). Its
+own per-day scoring loop (lines ~325-347):
+
+    days = sorted(set(res_df.index.normalize()))
+    raw, prev_peak = [], None
+    for d in days:
+        day = res_df[res_df.index.normalize() == d]
+        ...
+        growth = 0.0 if prev_peak is None else (r["p50"] - prev_peak) / max(prev_peak, 1)
+        ...
+        prev_peak = r["p50"]
+
+This iterates the sorted list of unique CALENDAR days and carries `prev_peak` forward from each
+iteration to the next -- i.e., growth is computed against the immediately preceding CALENDAR
+day's P50 peak. This is unambiguous: the approved, empirically-evaluated reference window from
+Phase 8 is the CALENDAR-DAY window, not a T-anchored 24h window. The same file's "worst
+reliability" computation (also line ~331) uses the identical calendar-day `day` slice for
+reliability, confirming the calendar-day scope applies to reliability too, not just growth.
+
+This was NOT a choice between two options based on which produced more favorable results -- it
+was a direct read of the one phase script that already empirically validated and locked this
+formula. The calendar-day window was selected because it IS the already-approved one, and for no
+other reason.
+
+## 4. Before vs after
+
+Scanned every day in the 61-day test period where day_state(), replay(), and run_scenario() can
+all be evaluated at a comparable issue time (T = that day's own predicted peak minus 24h); 2 of 61
+days fall too close to the test period's own start/end edges for a full 24h replay window and were
+excluded (2025-05-01, 2025-06-11 as a T-anchor -- both legitimately raise a "window too
+incomplete" error, unrelated to this fix). 59 days remained.
+
+  BEFORE this fix: max |stress-score discrepancy| = 19.2 points (up to 20.2 when the reliability-
+  scope bug is included, which the original Phase 13 report's scan had not yet isolated); 2/61
+  days crossed a stress-LEVEL tier boundary; 3/61 days crossed a peak-risk tier boundary.
+
+  AFTER this fix, split by what the three paths were actually evaluating:
+
+    - 35 of the 59 days: day_state, replay, and run_scenario all identify the SAME predicted-peak
+      timestamp for that day (i.e., they are genuinely scoring the identical forecast state).
+      Result: stress_score, stress_level, AND peak_risk are bit-identical across all three paths
+      on EVERY one of these 35 days. Maximum discrepancy: 0.0. This includes the flagship
+      2025-06-12 demo day (all three now report 62.4, WATCH, MODERATE) and 2025-06-13 (all three
+      report 54.9, WATCH, MODERATE).
+
+    - 24 of the 59 days: day_state's calendar-day peak and replay/run_scenario's 24h-ahead-window
+      peak are DIFFERENT timestamps (see Section 8) -- these are genuinely different forecast
+      states, so a score difference (up to 20.2 points on these days) is not something a "same
+      forecast state -> same score" guarantee can or should eliminate. On these days,
+      replay() and run_scenario() still agree with EACH OTHER exactly (both now use the identical
+      canonical lookups), confirming the fix removed every source of internal inconsistency
+      between them.
+
+  TARGET STATED IN THE AUTHORIZATION: "0 discrepancy for identical forecast states." ACHIEVED:
+  0.0 discrepancy, verified across all 35 same-state days, with an explicit two-day spot check
+  (2025-06-12, 2025-06-13) shown above.
+
+## 5. Tier consistency
+
+Among the 35 same-state days: 0 stress-level mismatches, 0 peak-risk mismatches (both checked
+exactly, not just the numeric score).
+
+Among the 24 different-state days: tier differences remain on some days (e.g. 2025-06-15 shows a
+NORMAL/WATCH split, and three days show a LOW/MODERATE peak-risk split) -- but since these days
+are evaluating two different peak timestamps to begin with, a tier match was never guaranteed by
+this fix and is not claimed. Every one of these remaining tier differences is between day_state
+and (replay==run_scenario, which still agree with each other in every case).
+
+## 6. Test results
+
+  1. AppTest full-app initial render: 0 exceptions.
+  2. AppTest OVERVIEW multi-date test (2025-05-05, 2025-06-10, 2025-06-12, 2025-06-13,
+     2025-06-30): 0 exceptions across all 5 dates.
+  3. AppTest WHAT-IF: +5.0C temperature scenario on 2025-06-12 changed every displayed metric
+     (confirms the scenario recomputation still genuinely runs). Enabling solar (1,500 MW) ran
+     with 0 exceptions.
+  4. AppTest PROOF MODE: both PRIMARY (2025-06-12) and SECONDARY (2025-06-11) events render with
+     0 exceptions; "ACTUAL OUTCOME" confirmed absent before the reveal toggle and present after,
+     for both events -- no leakage introduced by this fix.
+  5. Explicit consistency test (this task's required test): for 2025-06-12 and 2025-06-13,
+     day_state(), run_scenario(T, "base"), and replay(T) were called directly and their
+     stress_score / stress_level / peak_risk fields compared with Python `==` (not
+     eyeballed) -- all three fields matched exactly on both days (Section 4).
+  6. No-retrain check: 20 repeated calls to day_state()/run_scenario() after the one-time
+     build_backend() completed in 0.28s combined -- consistent with the fitted model closures
+     being reused, not refit.
+  7. Error handling re-check: pointing the app at a missing data directory still produces exactly
+     one st.error message and 0 unhandled exceptions -- this fix did not touch error handling.
+  8. Live server smoke test: `streamlit run phase13_dashboard_app.py` started cleanly; HTTP GET
+     on `/` returned 200; `/_stcore/health` returned 200.
+
+## 7. Dashboard status
+
+All three tabs (OVERVIEW / WHAT-IF / PROOF MODE) work, per the tests in Section 6. No UI layout,
+navigation, or feature changed -- the only dashboard-visible change is the wording of the two
+captions that previously said "KNOWN ISSUE" (Overview top row, What-If BASE line): they now state
+that the score is canonical and matches across tabs for the same forecast state, with a short,
+accurate note about the separate, disclosed peak-selection difference (Section 8) rather than an
+open question. No other caption, control, chart, or table was modified.
+
+## 8. Remaining known issues
+
+Only one, and it is NOT a stress-score inconsistency (that is what this fix resolved):
+
+  day_state() selects "the peak" as the maximum P50 within a CALENDAR DAY. replay() and
+  run_scenario() select "the peak" as the maximum P50 within the 24-HOUR WINDOW starting 15
+  minutes after the forecast issue time T (i.e., "whatever the forecast issued at T says the
+  highest point of the next 24 hours will be"). These are two different, both intentional,
+  both previously-approved definitions -- day_state's calendar-day framing IS what Grid Stress
+  Score's Phase 8 evaluation used (Section 3); replay/run_scenario's T-anchored-window framing IS
+  what Proof Mode's "a forecast issued once, covering the next 24 hours" concept (Phase 9) and
+  What-If's "the scenario window" concept (Phase 10) mean by construction. On 24 of the 59 testable
+  days, these two definitions pick a genuinely different timestamp (and therefore a genuinely
+  different p50/p90/temp_corr/reliability state) for what a user might otherwise assume is "this
+  day's forecast."
+
+  This was NOT part of the authorized fix -- resolving it would mean changing what "the peak"
+  means in either day_state() (violating "Do NOT change ... risk thresholds" and altering
+  Overview's own established framing) or in replay()/run_scenario() (explicitly listed as
+  DO NOT CHANGE: "Proof Mode logic," "What-If logic"). It is disclosed here, with its exact
+  frequency and magnitude (Section 4), and reflected in the dashboard's two updated captions
+  (Section 7), so a judge who notices a difference on one of these 24 days sees an accurate
+  explanation rather than either a hidden bug or an unexplained "known issue." It is a candidate
+  for an explicitly authorized future phase, not resolved here.
+
+====================================================================================================
+STOP CONDITION
+====================================================================================================
+No new features were added. No UI was redesigned. Final pitch work was not started. The stress
+score is now computed by exactly one canonical function, and the growth-term and
+reliability-scope inconsistencies named in the authorization are fixed and verified (0
+discrepancy across all 35 days where the three paths evaluate the same forecast state). The
+"KNOWN ISSUE" captions have been removed and replaced with accurate ones now that the consistency
+tests pass.
+
+"PHASE 13 CONSISTENCY FIX COMPLETE -- WAITING FOR APPROVAL."

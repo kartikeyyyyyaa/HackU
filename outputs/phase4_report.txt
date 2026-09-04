@@ -1,0 +1,49 @@
+PHASE 4 -- FORWARD-LOOKING WEATHER: A vs B
+==============================================================================================
+
+PRE-FLIGHT
+----------------------------------------------------------------------------------------------
+  peak 2025-06-12 23:00:00 present in test : YES, 8,392.6 MW
+  train rows / test rows               : 69,148 / 5,817
+  test range                           : 2025-05-01 00:00:00 -> 2025-06-30 23:45:00
+  test max demand                      : 8,392.6 MW
+  rows dropped for missing forecast    : 20,296 (forecast archive has gaps in 2023-24; identical rows used for A, B and reference)
+
+QUALITY OF THE 24h-LEAD TEMPERATURE FORECAST ITSELF (this bounds what Model B can gain)
+----------------------------------------------------------------------------------------------
+  test window : MAE 1.81 C, bias -0.78 C, sd 2.11 C, worst 8.10 C
+  train window: MAE 2.60 C, bias +1.70 C
+  (a non-zero error confirms this is a genuine forecast, not observed weather relabelled)
+
+METRIC DEFINITIONS (fixed in advance)
+----------------------------------------------------------------------------------------------
+  peak period      : actual >= P90 of actual in test = 6,786.8 MW (582 blocks)
+  daily peaks      : highest-actual block of each of the 61 test days
+  heatwave period  : all blocks on days whose OBSERVED daily max temp >= 40.0 C (18 days, 1,689 blocks)
+
+RESULTS -- identical rows, identical target, identical horizon
+----------------------------------------------------------------------------------------------
+Model                                    MAPE     MAE    RMSE  PeakMAPE  HeatMAPE  DailyPk
+----------------------------------------------------------------------------------------------
+A. OLS Tier-1 (no forward weather)      6.31%   341.8   475.0     7.42%     6.25%    5.72%
+B. OLS + 24h FORECAST temperature       6.23%   341.1   469.2     7.70%     6.75%    6.05%
+REF. OLS + observed future temp (not operational)  5.47%   299.2   423.6     6.60%     5.79%    5.08%
+----------------------------------------------------------------------------------------------
+
+EXTREME-PEAK DETAIL
+----------------------------------------------------------------------------------------------
+Model                                     Err@8392.6   >5% under  >10% under   MaxUnder
+----------------------------------------------------------------------------------------------
+A. OLS Tier-1 (no forward weather)       -793.7 MW      31/61        7/61      2376.0
+B. OLS + 24h FORECAST temperature        -925.0 MW      31/61        8/61      2381.3
+REF. OLS + observed future temp (not operational)   -773.8 MW      26/61        4/61      2305.7
+----------------------------------------------------------------------------------------------
+
+A -> B CHANGE (positive = forecast weather helped)
+----------------------------------------------------------------------------------------------
+  overall MAPE               6.31% ->   6.23%  (+0.07 pp)   perfect-weather ceiling 5.47% (+0.84 pp), captured 9%
+  peak-period MAPE           7.42% ->   7.70%  (-0.28 pp)   perfect-weather ceiling 6.60% (+0.83 pp), captured -34%
+  heatwave-period MAPE       6.25% ->   6.75%  (-0.50 pp)   perfect-weather ceiling 5.79% (+0.46 pp), captured -109%
+  daily-peak MAPE            5.72% ->   6.05%  (-0.33 pp)   perfect-weather ceiling 5.08% (+0.64 pp), captured -51%
+  error at the 8,392.6 MW peak  -793.7 MW -> -925.0 MW (perfect-weather ref -773.8 MW)
+  daily peaks missed >10%       7/61 -> 8/61 (ref 4/61)

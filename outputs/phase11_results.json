@@ -1,0 +1,254 @@
+{
+  "ratio_derivation": {
+    "sources": [
+      {
+        "source": "thepatriot.in, 'At 8,423 MW, Delhi breaks 2025 peak demand record'",
+        "date": "2025-06-12",
+        "utility": "Delhi total",
+        "mw": 8423.0,
+        "kind": "SLDC-reported (15:06 IST)"
+      },
+      {
+        "source": "  same article",
+        "date": "2025-06-12",
+        "utility": "BRPL",
+        "mw": 3747.0,
+        "kind": "utility-reported, same-day"
+      },
+      {
+        "source": "  same article",
+        "date": "2025-06-12",
+        "utility": "BYPL",
+        "mw": 1832.0,
+        "kind": "utility-reported, same-day"
+      },
+      {
+        "source": "  same article",
+        "date": "2025-06-12",
+        "utility": "BRPL (2025 season expectation)",
+        "mw": 4050.0,
+        "kind": "utility's own stated forecast"
+      },
+      {
+        "source": "  same article",
+        "date": "2025-06-12",
+        "utility": "BYPL (2025 season expectation)",
+        "mw": 1900.0,
+        "kind": "utility's own stated forecast"
+      },
+      {
+        "source": "theprint.in, 'Delhi's peak demand soars to season's highest 8231 MW'",
+        "date": "2026-05-21",
+        "utility": "Delhi total",
+        "mw": 8231.0,
+        "kind": "SLDC-reported, season-to-date"
+      },
+      {
+        "source": "  same article",
+        "date": "2026-05-21",
+        "utility": "BRPL",
+        "mw": 3762.0,
+        "kind": "utility-reported, season-to-date"
+      },
+      {
+        "source": "  same article",
+        "date": "2026-05-21",
+        "utility": "BYPL",
+        "mw": 1838.0,
+        "kind": "utility-reported, season-to-date"
+      },
+      {
+        "source": "  same article",
+        "date": "2026-05-21",
+        "utility": "TPDDL",
+        "mw": 2331.0,
+        "kind": "utility-reported, season-to-date"
+      },
+      {
+        "source": "Tata Power-DDL press release, 'TPDDL continues to meet demand efficiently'",
+        "date": "2025-04-02",
+        "utility": "TPDDL (2025 season expectation)",
+        "mw": 2562.0,
+        "kind": "utility's own official forecast"
+      }
+    ],
+    "chosen_ratios": {
+      "BRPL": 0.44485337765641697,
+      "BYPL": 0.21749970319363648,
+      "TPDDL": 0.28319766735512086,
+      "NDMC_MES_RESIDUAL": 0.054449251794825626
+    },
+    "own_2025_expected_peak_reference_mw": {
+      "BRPL": 4050.0,
+      "BYPL": 1900.0,
+      "TPDDL": 2562.0
+    },
+    "sanity_check": {
+      "brpl_out_of_sample_error_pct": -2.67,
+      "bypl_out_of_sample_error_pct": -2.6
+    }
+  },
+  "events": {
+    "2025-06-11": {
+      "peak_time": "2025-06-11 15:30:00",
+      "delhi_p50": 7371.4,
+      "delhi_p90": 8230.7,
+      "delhi_actual": 7627.7,
+      "reliability": "LOW",
+      "discoms": {
+        "BRPL": {
+          "p50_mw": 3279.2,
+          "p90_mw": 3661.4,
+          "share": 0.4449,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.81,
+          "relative_to_own_2025_expected_peak_p90": 0.904
+        },
+        "BYPL": {
+          "p50_mw": 1603.3,
+          "p90_mw": 1790.2,
+          "share": 0.2175,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.844,
+          "relative_to_own_2025_expected_peak_p90": 0.942
+        },
+        "TPDDL": {
+          "p50_mw": 2087.6,
+          "p90_mw": 2330.9,
+          "share": 0.2832,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.815,
+          "relative_to_own_2025_expected_peak_p90": 0.91
+        },
+        "NDMC_MES_UNDECOMPOSED": {
+          "p50_mw": 401.4,
+          "p90_mw": 448.2,
+          "share": 0.0544,
+          "status": "RESIDUAL -- NOT INDIVIDUALLY SOURCED",
+          "note": "combined NDMC+MES; no data exists to split this further"
+        }
+      }
+    },
+    "2025-06-12": {
+      "peak_time": "2025-06-12 23:00:00",
+      "delhi_p50": 7795.2,
+      "delhi_p90": 8417.6,
+      "delhi_actual": 8392.6,
+      "reliability": "MEDIUM",
+      "discoms": {
+        "BRPL": {
+          "p50_mw": 3467.7,
+          "p90_mw": 3744.6,
+          "share": 0.4449,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.856,
+          "relative_to_own_2025_expected_peak_p90": 0.925
+        },
+        "BYPL": {
+          "p50_mw": 1695.4,
+          "p90_mw": 1830.8,
+          "share": 0.2175,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.892,
+          "relative_to_own_2025_expected_peak_p90": 0.964
+        },
+        "TPDDL": {
+          "p50_mw": 2207.6,
+          "p90_mw": 2383.8,
+          "share": 0.2832,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.862,
+          "relative_to_own_2025_expected_peak_p90": 0.93
+        },
+        "NDMC_MES_UNDECOMPOSED": {
+          "p50_mw": 424.4,
+          "p90_mw": 458.3,
+          "share": 0.0544,
+          "status": "RESIDUAL -- NOT INDIVIDUALLY SOURCED",
+          "note": "combined NDMC+MES; no data exists to split this further"
+        }
+      }
+    },
+    "2025-06-13": {
+      "peak_time": "2025-06-13 23:00:00",
+      "delhi_p50": 7874.9,
+      "delhi_p90": 8423.3,
+      "delhi_actual": 7850.0,
+      "reliability": "HIGH",
+      "discoms": {
+        "BRPL": {
+          "p50_mw": 3503.2,
+          "p90_mw": 3747.1,
+          "share": 0.4449,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.865,
+          "relative_to_own_2025_expected_peak_p90": 0.925
+        },
+        "BYPL": {
+          "p50_mw": 1712.8,
+          "p90_mw": 1832.1,
+          "share": 0.2175,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.901,
+          "relative_to_own_2025_expected_peak_p90": 0.964
+        },
+        "TPDDL": {
+          "p50_mw": 2230.1,
+          "p90_mw": 2385.5,
+          "share": 0.2832,
+          "status": "MODELED ESTIMATE",
+          "relative_to_own_2025_expected_peak_p50": 0.87,
+          "relative_to_own_2025_expected_peak_p90": 0.931
+        },
+        "NDMC_MES_UNDECOMPOSED": {
+          "p50_mw": 428.8,
+          "p90_mw": 458.6,
+          "share": 0.0544,
+          "status": "RESIDUAL -- NOT INDIVIDUALLY SOURCED",
+          "note": "combined NDMC+MES; no data exists to split this further"
+        }
+      }
+    }
+  },
+  "main_peak_event": {
+    "timestamp": "2025-06-12 23:00:00",
+    "delhi_forecast_mw": {
+      "p50": 7795.2,
+      "p90": 8417.6
+    },
+    "discoms": {
+      "BRPL": {
+        "p50_mw": 3467.7,
+        "p90_mw": 3744.6,
+        "share": 0.4449,
+        "status": "MODELED ESTIMATE",
+        "relative_to_own_2025_expected_peak_p50": 0.856,
+        "relative_to_own_2025_expected_peak_p90": 0.925
+      },
+      "BYPL": {
+        "p50_mw": 1695.4,
+        "p90_mw": 1830.8,
+        "share": 0.2175,
+        "status": "MODELED ESTIMATE",
+        "relative_to_own_2025_expected_peak_p50": 0.892,
+        "relative_to_own_2025_expected_peak_p90": 0.964
+      },
+      "TPDDL": {
+        "p50_mw": 2207.6,
+        "p90_mw": 2383.8,
+        "share": 0.2832,
+        "status": "MODELED ESTIMATE",
+        "relative_to_own_2025_expected_peak_p50": 0.862,
+        "relative_to_own_2025_expected_peak_p90": 0.93
+      },
+      "NDMC_MES_UNDECOMPOSED": {
+        "p50_mw": 424.4,
+        "p90_mw": 458.3,
+        "share": 0.0544,
+        "status": "RESIDUAL -- NOT INDIVIDUALLY SOURCED",
+        "note": "combined NDMC+MES; no data exists to split this further"
+      }
+    }
+  },
+  "decision": "YES, WITH CLEAR 'MODELED ESTIMATE' LABEL -- BRPL/BYPL/TPDDL only; NDMC+MES shown only as an undecomposed residual"
+}

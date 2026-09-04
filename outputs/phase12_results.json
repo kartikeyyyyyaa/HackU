@@ -1,0 +1,335 @@
+{
+  "rules": [
+    {
+      "condition": "peak_risk in {HIGH, CRITICAL} AND hours_to_peak <= 2",
+      "category": "DEMAND RESPONSE",
+      "advisory": "Consider peak-period demand-response measures for the next few hours."
+    },
+    {
+      "condition": "peak_risk in {HIGH, CRITICAL} AND hours_to_peak > 2",
+      "category": "PREPARE",
+      "advisory": "Prepare additional reserve/capacity ahead of the forecast peak."
+    },
+    {
+      "condition": "peak_risk == MODERATE",
+      "category": "MONITOR",
+      "advisory": "Increase monitoring attention ahead of the forecast peak."
+    },
+    {
+      "condition": "peak_risk == LOW",
+      "category": "MONITOR (routine)",
+      "advisory": "No immediate action beyond routine monitoring."
+    },
+    {
+      "condition": "reliability == LOW",
+      "category": "DATA QUALITY WARNING",
+      "advisory": "Treat this forecast as low-confidence and prioritize confirmation of critical telemetry."
+    },
+    {
+      "condition": "reliability == MEDIUM",
+      "category": "DATA QUALITY WARNING (lighter)",
+      "advisory": "Treat this forecast with moderate caution; some inputs were reconstructed or incomplete."
+    },
+    {
+      "condition": "util50 < 0.88 AND util90 >= 0.88",
+      "category": "PREPARE",
+      "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast."
+    },
+    {
+      "condition": "max DISCOM relative_stress_p50 >= 0.90",
+      "category": "MONITOR",
+      "advisory": "Increase monitoring attention on {stressed_discom} (modeled relative stress {stressed_pct:.0f}% of its own 2025 reference) -- separately from {largest_discom}, which carries the largest modeled MW contribution ({largest_pct:.0f}%)."
+    },
+    {
+      "condition": "stress_level in {HIGH, CRITICAL}",
+      "category": "CONSERVATION ADVISORY",
+      "advisory": "Issue a public conservation advisory encouraging reduced non-essential demand during the forecast peak window."
+    }
+  ],
+  "historical_test_days": {
+    "2025-06-10": {
+      "state": {
+        "date": "2025-06-10",
+        "hours_to_peak": 24.0,
+        "p50": 6810.4155588188405,
+        "p90": 7280.256838586066,
+        "util50": 0.75671283986876,
+        "util90": 0.8089174265095629,
+        "reliability": "HIGH",
+        "reliability_reasons": [
+          "all critical demand inputs observed; previous 24h telemetry complete"
+        ],
+        "stress_score": 21.0,
+        "stress_level": "NORMAL",
+        "peak_risk": "LOW",
+        "peak_risk_reasons": [
+          "P90 stays at 81% of assumed capacity (below the 88% MODERATE threshold)"
+        ],
+        "main_driver": "P90 near capacity (81%)",
+        "discoms": {
+          "BRPL": {
+            "p50_mw": 3029.6,
+            "p90_mw": 3238.6,
+            "share": 0.4449,
+            "relative_stress_p50": 0.748,
+            "relative_stress_p90": 0.8
+          },
+          "BYPL": {
+            "p50_mw": 1481.3,
+            "p90_mw": 1583.5,
+            "share": 0.2175,
+            "relative_stress_p50": 0.78,
+            "relative_stress_p90": 0.833
+          },
+          "TPDDL": {
+            "p50_mw": 1928.7,
+            "p90_mw": 2061.8,
+            "share": 0.2832,
+            "relative_stress_p50": 0.753,
+            "relative_stress_p90": 0.805
+          }
+        }
+      },
+      "advisories": [
+        {
+          "category": "MONITOR (routine)",
+          "trigger": "no elevated peak risk",
+          "advisory": "No immediate action beyond routine monitoring.",
+          "reason": "Peak risk is LOW; P90 stays at 81% of assumed capacity."
+        }
+      ]
+    },
+    "2025-06-11": {
+      "state": {
+        "date": "2025-06-11",
+        "hours_to_peak": 24.0,
+        "p50": 7371.413872169124,
+        "p90": 8230.650217001896,
+        "util50": 0.8190459857965694,
+        "util90": 0.9145166907779884,
+        "reliability": "LOW",
+        "reliability_reasons": [
+          "critical 24h demand input was reconstructed from the nearest available earlier day (telemetry gap)"
+        ],
+        "stress_score": 66.7,
+        "stress_level": "WATCH",
+        "peak_risk": "MODERATE",
+        "peak_risk_reasons": [
+          "P90 reaches 91% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)",
+          "forecast reliability is LOW, so the upper bound is less dependable"
+        ],
+        "main_driver": "P90 near capacity (91%)",
+        "discoms": {
+          "BRPL": {
+            "p50_mw": 3279.2,
+            "p90_mw": 3661.4,
+            "share": 0.4449,
+            "relative_stress_p50": 0.81,
+            "relative_stress_p90": 0.904
+          },
+          "BYPL": {
+            "p50_mw": 1603.3,
+            "p90_mw": 1790.2,
+            "share": 0.2175,
+            "relative_stress_p50": 0.844,
+            "relative_stress_p90": 0.942
+          },
+          "TPDDL": {
+            "p50_mw": 2087.6,
+            "p90_mw": 2330.9,
+            "share": 0.2832,
+            "relative_stress_p50": 0.815,
+            "relative_stress_p90": 0.91
+          }
+        }
+      },
+      "advisories": [
+        {
+          "category": "MONITOR",
+          "trigger": "moderate peak risk",
+          "advisory": "Increase monitoring attention ahead of the forecast peak.",
+          "reason": "Peak risk is MODERATE (P90 91% of assumed capacity, below the HIGH threshold)."
+        },
+        {
+          "category": "DATA QUALITY WARNING",
+          "trigger": "critical input reconstructed",
+          "advisory": "Treat this forecast as low-confidence and prioritize confirmation of critical telemetry.",
+          "reason": "critical 24h demand input was reconstructed from the nearest available earlier day (telemetry gap)"
+        },
+        {
+          "category": "PREPARE",
+          "trigger": "comfortable point forecast, uncomfortable upper band",
+          "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast.",
+          "reason": "P50 suggests 82% of assumed capacity, but P90 reaches 91% -- the central forecast alone could understate the event."
+        }
+      ]
+    },
+    "2025-06-12": {
+      "state": {
+        "date": "2025-06-12",
+        "hours_to_peak": 24.0,
+        "p50": 7795.152102918743,
+        "p90": 8417.555079694881,
+        "util50": 0.866128011435416,
+        "util90": 0.9352838977438757,
+        "reliability": "MEDIUM",
+        "reliability_reasons": [
+          "48h demand input was reconstructed (telemetry gap on the preceding day)"
+        ],
+        "stress_score": 62.4,
+        "stress_level": "WATCH",
+        "peak_risk": "MODERATE",
+        "peak_risk_reasons": [
+          "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)"
+        ],
+        "main_driver": "P90 near capacity (94%)",
+        "discoms": {
+          "BRPL": {
+            "p50_mw": 3467.7,
+            "p90_mw": 3744.6,
+            "share": 0.4449,
+            "relative_stress_p50": 0.856,
+            "relative_stress_p90": 0.925
+          },
+          "BYPL": {
+            "p50_mw": 1695.4,
+            "p90_mw": 1830.8,
+            "share": 0.2175,
+            "relative_stress_p50": 0.892,
+            "relative_stress_p90": 0.964
+          },
+          "TPDDL": {
+            "p50_mw": 2207.6,
+            "p90_mw": 2383.8,
+            "share": 0.2832,
+            "relative_stress_p50": 0.862,
+            "relative_stress_p90": 0.93
+          }
+        }
+      },
+      "advisories": [
+        {
+          "category": "MONITOR",
+          "trigger": "moderate peak risk",
+          "advisory": "Increase monitoring attention ahead of the forecast peak.",
+          "reason": "Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold)."
+        },
+        {
+          "category": "DATA QUALITY WARNING (lighter)",
+          "trigger": "secondary input reconstructed/incomplete",
+          "advisory": "Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.",
+          "reason": "48h demand input was reconstructed (telemetry gap on the preceding day)"
+        },
+        {
+          "category": "PREPARE",
+          "trigger": "comfortable point forecast, uncomfortable upper band",
+          "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast.",
+          "reason": "P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event."
+        }
+      ]
+    },
+    "2025-06-13": {
+      "state": {
+        "date": "2025-06-13",
+        "hours_to_peak": 24.0,
+        "p50": 7874.877359226407,
+        "p90": 8423.268624217662,
+        "util50": 0.8749863732473786,
+        "util90": 0.9359187360241847,
+        "reliability": "HIGH",
+        "reliability_reasons": [
+          "all critical demand inputs observed; previous 24h telemetry complete"
+        ],
+        "stress_score": 54.9,
+        "stress_level": "WATCH",
+        "peak_risk": "MODERATE",
+        "peak_risk_reasons": [
+          "P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)"
+        ],
+        "main_driver": "P90 near capacity (94%)",
+        "discoms": {
+          "BRPL": {
+            "p50_mw": 3503.2,
+            "p90_mw": 3747.1,
+            "share": 0.4449,
+            "relative_stress_p50": 0.865,
+            "relative_stress_p90": 0.925
+          },
+          "BYPL": {
+            "p50_mw": 1712.8,
+            "p90_mw": 1832.1,
+            "share": 0.2175,
+            "relative_stress_p50": 0.901,
+            "relative_stress_p90": 0.964
+          },
+          "TPDDL": {
+            "p50_mw": 2230.1,
+            "p90_mw": 2385.5,
+            "share": 0.2832,
+            "relative_stress_p50": 0.87,
+            "relative_stress_p90": 0.931
+          }
+        }
+      },
+      "advisories": [
+        {
+          "category": "MONITOR",
+          "trigger": "moderate peak risk",
+          "advisory": "Increase monitoring attention ahead of the forecast peak.",
+          "reason": "Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold)."
+        },
+        {
+          "category": "PREPARE",
+          "trigger": "comfortable point forecast, uncomfortable upper band",
+          "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast.",
+          "reason": "P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event."
+        },
+        {
+          "category": "MONITOR",
+          "trigger": "a specific utility modeled near its own reference",
+          "advisory": "Increase monitoring attention on BYPL (modeled relative stress 90%) -- do not assume it is automatically BRPL, the utility with the largest modeled MW contribution.",
+          "reason": "BRPL carries the largest modeled MW contribution (44%), but BYPL shows the highest modeled relative stress (90% of its own 2025 reference) -- contribution and relative stress point to different utilities."
+        }
+      ]
+    }
+  },
+  "main_peak_event_decision_card": {
+    "PEAK_RISK": "MODERATE",
+    "RELIABILITY": "MEDIUM",
+    "MAIN_DRIVER": "P90 near capacity (94%)",
+    "MODELED_AREA_OF_CONCERN": "BYPL -- highest relative stress (89% of own 2025 reference)",
+    "LARGEST_MODELED_CONTRIBUTION": "BRPL (44% of Delhi modeled peak)",
+    "ADVISORIES": [
+      {
+        "category": "MONITOR",
+        "trigger": "moderate peak risk",
+        "advisory": "Increase monitoring attention ahead of the forecast peak.",
+        "reason": "Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold)."
+      },
+      {
+        "category": "DATA QUALITY WARNING (lighter)",
+        "trigger": "secondary input reconstructed/incomplete",
+        "advisory": "Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.",
+        "reason": "48h demand input was reconstructed (telemetry gap on the preceding day)"
+      },
+      {
+        "category": "PREPARE",
+        "trigger": "comfortable point forecast, uncomfortable upper band",
+        "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast.",
+        "reason": "P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event."
+      }
+    ]
+  },
+  "false_alarm_check": {
+    "n_days": 61,
+    "routine_only_days": 54,
+    "category_counts": {
+      "MONITOR (routine)": 54,
+      "MONITOR": 9,
+      "DATA QUALITY WARNING": 1,
+      "PREPARE": 7,
+      "DATA QUALITY WARNING (lighter)": 1
+    }
+  },
+  "recommendation": "CORE PRODUCT FEATURE"
+}

@@ -1,0 +1,26 @@
+Python 3.13.14
+pip 26.2.1 from C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pip (python 3.13)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 194, in _run_module_as_main
+  File "<frozen runpy>", line 151, in _get_module_details
+  File "<frozen runpy>", line 114, in _get_module_details
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\__init__.py", line 62, in <module>
+    from streamlit import config as _config
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\config.py", line 30, in <module>
+    from streamlit import config_util, development, env_util, file_util, util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\config_util.py", line 27, in <module>
+    from streamlit import cli_util, url_util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\cli_util.py", line 22, in <module>
+    from streamlit import env_util, errors
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\errors.py", line 22, in <module>
+    from streamlit import util
+  File "C:\Users\Kartikeya shukla\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\streamlit\util.py", line 24, in <module>
+    from streamlit.proto.RootContainer_pb2 import RootContainer
+ModuleNotFoundError: No module named 'streamlit.proto'
+C:\Users\Kartikeya shukla\AppData\Local\Microsoft\WindowsApps\python.exe
+'py' is not recognized as an internal or external command,
+operable program or batch file.
+Claude outputs
+data
+outputs
+src

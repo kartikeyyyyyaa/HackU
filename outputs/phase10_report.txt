@@ -1,0 +1,196 @@
+PHASE 10 -- WHAT-IF DECISION SIMULATOR
+====================================================================================================
+PRE-FLIGHT CHECK: locked pipeline reproduced 5,817 test blocks, base forecast at the known season peak = 7,795.2 MW (P90 8,417.6) -- identical to Phase 7/8/9.
+
+====================================================================================================
+APPROVED FIX -- peak_risk_reasons now names the exact triggering condition
+====================================================================================================
+  Before (Phase 7/8/9): a MODERATE day whose trigger was util90 >= 88% printed only the
+  reliability reason when reliability was LOW, omitting the utilisation condition that actually
+  produced the tier. Re-checked here against the Phase 9 primary event:
+    util50=86.6%, util90=93.5%, reliability=LOW -> MODERATE, reasons: ['P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)', 'forecast reliability is LOW, so the upper bound is less dependable']
+  The utilisation condition (>=88% MODERATE threshold) is now stated explicitly. No threshold
+  value (88% / 92% / 95% / 100%) was changed.
+
+====================================================================================================
+## 1. Scenario variables supported
+====================================================================================================
+  TEMPERATURE  -- genuine model recomputation. delta in [-8C, +8C] (sanity bound), applied to
+                  the corrected forecast temperature feature and everything derived from it.
+  ROOFTOP SOLAR -- NOT a model prediction. A separate, labeled scenario calculation: an assumed
+                  daylight generation profile subtracted from the model's gross demand forecast
+                  to produce NET demand. Capacity in [0, 3000] MW (sanity bound).
+  EV LOAD / COMMERCIAL LOAD -- NOT implemented. No column in this project's data represents
+                  either component, so there is no honest way to model their effect (see Section 8).
+
+====================================================================================================
+## 2. How each variable changes the input
+====================================================================================================
+  Temperature: only 'ct' (=temp_corr), 'ccdh' (cooling-degree term), 'csq' (temp^2), and 'chx'
+  (extreme-heat term) are perturbed for the target window's blocks. 'temp_at_issue',
+  'temp_prevday_max', 'temp_prevday_mean' are the OBSERVED temperature from before the issue
+  time -- a fixed historical fact -- and are left untouched, matching what the model actually
+  represents.
+  Solar: the model's gross P10/P50/P90 forecast is computed exactly as in the base case, THEN a
+  half-sine daylight generation curve (sunrise 5.5h, sunset 19.25h -- Delhi, June,
+  IMD almanac) scaled to the chosen assumed capacity is subtracted block-by-block to get net
+  demand. This never touches the trained model.
+
+====================================================================================================
+## 3. How the forecast is recomputed
+====================================================================================================
+  Temperature scenarios re-run the SAME fitted OLS coefficients and the SAME fitted P10/P90
+  quantile-regression functions (all fitted once, in the locked pipeline, never refit here) on a
+  modified copy of the feature rows for the chosen 24h window. This is a genuine forward pass of
+  the trained model on counterfactual inputs -- not a lookup table and not a hand-written rule.
+  Solar scenarios do not touch the model at all; they are documented arithmetic on its output.
+
+====================================================================================================
+## 4. Physical bounds / sanity rules
+====================================================================================================
+  temperature delta        : +-8C (beyond this the model extrapolates far
+                              outside the training temperature range, 23.4-42.6C observed
+                              in the test period)
+  absolute corrected temp  : clamped to [5, 48] C (Delhi's
+                              plausible climatological range)
+  solar capacity           : clamped to [0, 3000] MW
+  net demand                : floored at 0 MW; any block where assumed generation would exceed
+                              forecast gross demand is explicitly flagged, not silently allowed
+  These bounds are fixed before running any scenario below and are not adjusted afterward.
+
+====================================================================================================
+## 5. Base vs scenario examples (real model outputs, run just now)
+====================================================================================================
+
+  -- BASE CASE (no scenario applied) --
+     predicted peak      : 7,795.2 MW at 2025-06-12 23:00:00 (P90 8,417.6 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 64.9 / WATCH
+     peak risk            : MODERATE
+       - P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+
+  -- SCENARIO: temperature +2C --
+     predicted peak      : 7,895.7 MW at 2025-06-12 23:00:00 (P90 8,528.4 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 71.2 / WATCH
+     peak risk            : MODERATE
+       - P90 reaches 95% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+     CHANGE vs base: peak 7,795.2 -> 7,895.7 MW (+100.5); P90 8,417.6 -> 8,528.4 MW (+110.8); stress 64.9 -> 71.2; risk MODERATE -> MODERATE
+
+  -- SCENARIO: temperature -2C --
+     predicted peak      : 7,696.8 MW at 2025-06-12 23:00:00 (P90 8,309.1 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 58.6 / WATCH
+     peak risk            : MODERATE
+       - P90 reaches 92% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+     CHANGE vs base: peak 7,795.2 -> 7,696.8 MW (-98.4); P90 8,417.6 -> 8,309.1 MW (-108.5); stress 64.9 -> 58.6; risk MODERATE -> MODERATE
+
+  -- SCENARIO: temperature +5C --
+     predicted peak      : 8,050.7 MW at 2025-06-12 23:00:00 (P90 8,699.3 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 79.3 / HIGH
+     peak risk            : HIGH
+       - P90 reaches 97% of assumed capacity (>=95% threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+     CHANGE vs base: peak 7,795.2 -> 8,050.7 MW (+255.5); P90 8,417.6 -> 8,699.3 MW (+281.7); stress 64.9 -> 79.3; risk MODERATE -> HIGH
+
+  -- SCENARIO: +500 MW assumed rooftop solar (net demand) --
+     predicted peak      : 7,795.2 MW at 2025-06-12 23:00:00 (P90 8,417.6 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 64.9 / WATCH
+     peak risk            : MODERATE
+       - P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+     CHANGE vs base: peak 7,795.2 -> 7,795.2 MW (+0.0); P90 8,417.6 -> 8,417.6 MW (+0.0); stress 64.9 -> 64.9; risk MODERATE -> MODERATE
+
+  -- SCENARIO: +1500 MW assumed rooftop solar (net demand) --
+     predicted peak      : 7,795.2 MW at 2025-06-12 23:00:00 (P90 8,417.6 MW)
+     reliability (unchanged by scenario): LOW
+     stress score / level : 64.9 / WATCH
+     peak risk            : MODERATE
+       - P90 reaches 94% of assumed capacity (>=88% MODERATE threshold, below the 95% HIGH threshold)
+       - forecast reliability is LOW, so the upper bound is less dependable
+     CHANGE vs base: peak 7,795.2 -> 7,795.2 MW (+0.0); P90 8,417.6 -> 8,417.6 MW (+0.0); stress 64.9 -> 64.9; risk MODERATE -> MODERATE
+
+====================================================================================================
+## 6. Impact summary table
+====================================================================================================
+scenario                                     peak MW    P90 MW         peak time  stress    level      risk
+------------------------------------------------------------------------------------------------------------
+BASE CASE (no scenario applied)              7,795.2   8,417.6       06-12 23:00    64.9    WATCH  MODERATE
+SCENARIO: temperature +2C                    7,895.7   8,528.4       06-12 23:00    71.2    WATCH  MODERATE
+SCENARIO: temperature -2C                    7,696.8   8,309.1       06-12 23:00    58.6    WATCH  MODERATE
+SCENARIO: temperature +5C                    8,050.7   8,699.3       06-12 23:00    79.3     HIGH      HIGH
+SCENARIO: +500 MW assumed rooftop solar (net demand)   7,795.2   8,417.6       06-12 23:00    64.9    WATCH  MODERATE
+SCENARIO: +1500 MW assumed rooftop solar (net demand)   7,795.2   8,417.6       06-12 23:00    64.9    WATCH  MODERATE
+------------------------------------------------------------------------------------------------------------
+
+  IMPORTANT READ OF THE TABLE ABOVE: the solar scenarios show ZERO change in peak/P90/stress/risk.
+  This is not a bug -- it is a genuine, informative result. On 2025-06-12 the demand peak occurs
+  at 23:00, well after sunset (the assumed generation window is 05:30-19:15); solar cannot touch a
+  block it isn't generating at. The metrics that key off the PEAK are correctly unaffected. Solar's
+  real effect on THIS day is visible only in the middle of the day, shown directly below:
+    at 2025-06-12 12:15:00 (near peak solar output): gross demand 6,632.9 MW -> net demand 6,133.1 MW with 500MW assumed capacity (499.8 MW generated at that block)
+    same block with 1500MW assumed capacity: net demand 5,133.5 MW (1,499.4 MW generated)
+    approximate energy served by assumed solar over the 24h window: 4,376 MWh (500MW case), 13,127 MWh (1500MW case)
+  This is exactly the real-world 'duck curve' effect: solar flattens the midday shoulder but does
+  not touch an evening/night system peak -- a genuinely useful, non-obvious result for an operator,
+  not something this script assumed in advance.
+
+====================================================================================================
+## 7. Validation / sanity checks (on the real 2025-06-11 23:00 issue time used above)
+====================================================================================================
+  [PASS] +2C raises the forecast peak vs base (7,795.2 -> 7,895.7 MW)
+  [PASS] -2C lowers the forecast peak vs base (7,795.2 -> 7,696.8 MW)
+  [PASS] +5C raises the forecast peak further than +2C (7,895.7 -> 8,050.7 MW) -- monotonic in the expected direction
+  [PASS] with +500MW solar, net demand <= gross demand at every daylight block
+  [PASS] net-demand peak <= base (gross) peak (7,795.2 vs 7,795.2 MW)
+  [PASS] net demand equals gross demand at night (solar profile is exactly 0 outside 5.5h-19.25h)
+  solar-1500MW sanity-clip check: no clipping needed -- (no blocks needed flooring at this capacity)
+  [PASS] no negative net-demand values anywhere in the +1500MW scenario (floored at 0 MW where triggered)
+  [PASS] at peak solar output (2025-06-12 12:15:00), net demand is measurably lower than gross demand (6,632.9 -> 6,133.1 MW)
+
+  ALL CHECKS: PASS
+  This validates DIRECTION and COHERENCE of the scenario layer on one real historical case. It
+  does NOT claim the scenario magnitudes are historically accurate -- no ground truth for 'what
+  if it had actually been 2C hotter' exists in this dataset to validate the magnitude against.
+
+====================================================================================================
+## 8. Limitations
+====================================================================================================
+  - Temperature scenarios reuse the model's EXISTING learned temperature sensitivity (from the
+    'ct'/'ccdh'/'csq'/'chx' coefficients). That sensitivity was estimated from the real range of
+    temperatures actually observed (23.4-42.6C in the test period); a +8C scenario pushes into
+    thinner training data and the model's response there is an extrapolation, not a validated
+    one -- flagged in Section 4, not hidden.
+  - Rooftop solar is an ASSUMPTION/SCENARIO CALCULATION, not learned from any data in this
+    project: there is no solar generation, irradiance, or installed-capacity column anywhere in
+    the dataset. The daylight profile shape (half-sine, fixed sunrise/sunset) and the capacity
+    values shown are illustrative and must be replaced with real generation data before any
+    operational use.
+  - EV load and commercial load are NOT implemented. Implementing them honestly would require a
+    labeled load-component breakdown that does not exist in this project's data; adding sliders
+    for them without that data would mean fabricating an effect, which this phase was explicitly
+    told not to do.
+  - The solar scenario's growth term in the stress score compares against the previous day's
+    unmodified (gross, no-solar) forecast peak, since no independent solar assumption for the
+    prior day is part of this tool -- this is a simplification, stated here rather than silently
+    assumed.
+  - Scenario recomputation has only been validated for DIRECTION and COHERENCE (Section 7), on
+    one real historical issue time. It has not been validated against any real hotter/cooler or
+    solar-equipped version of that same day, because no such counterfactual exists in the data.
+
+====================================================================================================
+## 9. Recommended final interaction
+====================================================================================================
+  A judge should be able to: (1) see the BASE CASE forecast, band, reliability, stress and risk
+  for a chosen day, exactly as Proof Mode already shows it; (2) move ONE temperature slider
+  (-8C to +8C) and watch the peak, P90, stress score and risk level genuinely recompute in real
+  time, via the same trained model; (3) toggle an assumed rooftop-solar capacity and watch the
+  net-demand curve visibly flatten around midday while the evening peak stays close to the gross
+  forecast -- a concrete, honest illustration of the duck-curve effect; (4) see every scenario
+  output labeled 'Estimated impact / Advisory', never as an instruction to act. This is exactly
+  the BASE -> what if -> RECOMPUTE -> is this now dangerous? flow requested for this phase.

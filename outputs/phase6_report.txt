@@ -1,0 +1,80 @@
+PHASE 6 -- CRITICAL INPUT ROBUSTNESS
+====================================================================================================
+
+1. GAP CHARACTERISATION
+----------------------------------------------------------------------------------------------------
+  15-min blocks with no observed demand : 1,027 of 97,728 (1.05%)
+  number of separate gaps               : 161
+  largest gap                           : 192 blocks (48.0 h)
+  gaps >= 1 day                         : 2
+  target blocks whose lag_24h is imputed (whole series) : 1,123 (1.15%)
+  ... within the approved test window                   : 39 (0.67%)
+
+2. AFFECTED TIMESTAMPS IN THE TEST WINDOW
+----------------------------------------------------------------------------------------------------
+  2025-06-11: 39 target blocks with imputed lag_24h (source day 2025-06-10 had 57/96 blocks observed)
+
+3a. IMPUTATION QUALITY VIA SIMULATED GAPS
+----------------------------------------------------------------------------------------------------
+  Real gaps give only 39 test blocks -- far too few to judge a rule on. So we hide
+  OBSERVED blocks at random, impute them, and compare against the truth we hid.
+  simulated outage blocks: 716 (evenings of 60 summer days)
+
+  strategy                                 MAE      RMSE      bias     worst     MAPE
+  ----------------------------------------------------------------------------------
+  A. seasonal-naive 7d (current)         715.3     950.1    -420.5    2893.5   12.78%
+  B. nearest available day               395.5     498.1    -158.2    1436.1    6.94%
+  ----------------------------------------------------------------------------------
+
+PRE-FLIGHT
+----------------------------------------------------------------------------------------------------
+  peak 2025-06-12 23:00:00 present : YES, 8,392.6 MW
+  test rows (identical across all 3 strategies) : 5,817
+  test max demand : 8,392.6 MW
+
+4. OVERALL METRICS
+----------------------------------------------------------------------------------------------------
+Strategy                           MAPE     MAE    RMSE  PeakMAPE  HeatMAPE  DailyPk   >5%  >10%  MaxUnder
+----------------------------------------------------------------------------------------------------
+A. current imputation             6.01%   326.3   458.3     6.98%     6.22%    5.45%    26     6    2365.0
+B. nearest-day imputation         5.94%   319.9   437.8     5.97%     5.80%    5.16%    26     5    1505.0
+C. nearest-day + imputed flag     5.93%   319.4   437.1     5.92%     5.78%    5.16%    27     5    1504.7
+----------------------------------------------------------------------------------------------------
+                                           error at the 8,392.6 MW peak:
+A. current imputation                                             -873.2 MW
+B. nearest-day imputation                                         -597.4 MW
+C. nearest-day + imputed flag                                     -599.8 MW
+
+5. OBSERVED-INPUT vs IMPUTED-INPUT PERFORMANCE
+----------------------------------------------------------------------------------------------------
+  test blocks with OBSERVED lag_24h : 5,778
+  test blocks with IMPUTED  lag_24h : 39  <- SMALL SAMPLE, treat these numbers as indicative only
+
+Strategy                          obs MAPE   obs MAE   imp MAPE   imp MAE   imp worst under
+----------------------------------------------------------------------------------------------------
+A. current imputation                5.90%     317.0     22.93%    1712.2            2365.0
+B. nearest-day imputation            5.92%     318.0      8.08%     606.5            1206.5
+C. nearest-day + imputed flag        5.92%     318.1      6.89%     519.2            1119.9
+----------------------------------------------------------------------------------------------------
+
+6. PEAK-DAY ANALYSIS -- 11, 12, 13 June 2025 daily peaks + the season peak
+----------------------------------------------------------------------------------------------------
+timestamp               actual  lag24 obs?  lag24 used    predA    predB    predC     errA     errB
+----------------------------------------------------------------------------------------------------
+2025-06-11 22:45:00      8,181          NO  5,355/7,216    5,821    7,127    7,214   -2,360   -1,054
+2025-06-12 23:00:00      8,393         YES  8,178/8,178    7,519    7,795    7,793     -873     -597
+2025-06-13 14:45:00      8,389         YES  8,299/8,299    7,743    7,733    7,732     -647     -656
+----------------------------------------------------------------------------------------------------
+  ('lag24 used' shows the value strategy A vs strategy B fed the model)
+  2025-06-11 22:45:00: lag_24h source 2025-06-10 22:45:00 was NOT observed.
+
+
+7. FORECAST RELIABILITY FLAG AND UNCERTAINTY BEHAVIOUR
+----------------------------------------------------------------------------------------------------
+  group                                   n   coverage   mean width       MAE
+  ----------------------------------------------------------------------------
+  HIGH reliability (lag observed)      5778      72.9%        809.3     318.0
+  LOW reliability (lag imputed)          39      51.3%        982.4     606.5
+  ----------------------------------------------------------------------------
+  error on LOW-reliability rows is 1.91x the error on HIGH-reliability rows,
+  but the band widens only 1.21x on them -> the band does NOT currently reflect input reliability.

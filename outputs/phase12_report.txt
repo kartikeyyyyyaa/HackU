@@ -1,0 +1,215 @@
+PHASE 12 -- ADVISORY RECOMMENDATION ENGINE
+====================================================================================================
+PRE-FLIGHT CHECK: locked pipeline reproduced 5,817 test blocks, Delhi P50 at the known
+season peak = 7,795.2 MW -- identical to Phase 7-11. Nothing about
+the demand model, stress score, or DISCOM ratios changes in this phase.
+
+====================================================================================================
+## 1. Recommendation rules
+====================================================================================================
+  Condition                                                     Category                    Advisory
+----------------------------------------------------------------------------------------------------
+  peak_risk in {HIGH, CRITICAL} AND hours_to_peak <= 2          DEMAND RESPONSE             Consider peak-period demand-response measures for the next few hours.
+  peak_risk in {HIGH, CRITICAL} AND hours_to_peak > 2           PREPARE                     Prepare additional reserve/capacity ahead of the forecast peak.
+  peak_risk == MODERATE                                         MONITOR                     Increase monitoring attention ahead of the forecast peak.
+  peak_risk == LOW                                              MONITOR (routine)           No immediate action beyond routine monitoring.
+  reliability == LOW                                            DATA QUALITY WARNING        Treat this forecast as low-confidence and prioritize confirmation of critical telemetry.
+  reliability == MEDIUM                                         DATA QUALITY WARNING (lighter)Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.
+  util50 < 0.88 AND util90 >= 0.88                              PREPARE                     Prepare for the upper-demand scenario rather than relying only on the central forecast.
+  max DISCOM relative_stress_p50 >= 0.90                        MONITOR                     Increase monitoring attention on {stressed_discom} (modeled relative stress {stressed_pct:.0f}% of its own 2025 reference) -- separately from {largest_discom}, which carries the largest modeled MW contribution ({largest_pct:.0f}%).
+  stress_level in {HIGH, CRITICAL}                              CONSERVATION ADVISORY       Issue a public conservation advisory encouraging reduced non-essential demand during the forecast peak window.
+----------------------------------------------------------------------------------------------------
+  Every advisory text above is a TEMPLATE; every {field} is substituted from an actual backend
+  value at evaluation time (Section 5/7 below) -- never freeform text, never an LLM call.
+  Vocabulary used throughout: consider / prepare / monitor / evaluate / investigate / issue
+  advisory. Never: execute / disconnect / shut down / reroute / switch a feeder.
+
+====================================================================================================
+## 2. Reliability-aware logic
+====================================================================================================
+  Reliability never claims the forecast IS wrong -- only that it is LESS TRUSTWORTHY, and says
+  why, using the exact same reliability_reasons text produced by the locked Phase 7 rules. LOW
+  reliability always produces a DATA QUALITY WARNING; MEDIUM produces a lighter version; HIGH
+  produces none -- silence is meaningful here, not an omission.
+
+====================================================================================================
+## 3. Uncertainty-aware logic
+====================================================================================================
+  The rule 'P50 comfortable, P90 not' is the direct, disclosed callback to the exact finding
+  that triggered Phase 8 (12 June: P50 86.6%, P90 93.5% of assumed capacity) -- this is now an
+  explicit, reusable trigger rather than something only visible in a retrospective report.
+
+====================================================================================================
+## 4. DISCOM-aware logic
+====================================================================================================
+  The engine NEVER says 'X is the most stressed utility' as a bare claim. It always states
+  contribution and relative stress as two separate, separately-sourced numbers, and names which
+  utility each belongs to -- exactly preserving the Phase 11 finding that these can differ.
+  If no utility's relative stress reaches 90% of its own reference, NO DISCOM advisory fires --
+  quiet days stay quiet.
+
+====================================================================================================
+## 5. Historical test examples
+====================================================================================================
+
+  -- 2025-06-10 (peak block 2025-06-10 00:30:00, 24.0h from issue) --
+     INPUT STATE: P50 6,810.4 MW (76%) | P90 7,280.3 MW (81%) | reliability HIGH | stress 21.0 (NORMAL) | peak_risk LOW | main driver: P90 near capacity (81%)
+     TRIGGER: no elevated peak risk
+       -> [MONITOR (routine)] No immediate action beyond routine monitoring.
+          REASON: Peak risk is LOW; P90 stays at 81% of assumed capacity.
+
+  -- 2025-06-11 (peak block 2025-06-11 15:30:00, 24.0h from issue) --
+     INPUT STATE: P50 7,371.4 MW (82%) | P90 8,230.7 MW (91%) | reliability LOW | stress 66.7 (WATCH) | peak_risk MODERATE | main driver: P90 near capacity (91%)
+     TRIGGER: moderate peak risk
+       -> [MONITOR] Increase monitoring attention ahead of the forecast peak.
+          REASON: Peak risk is MODERATE (P90 91% of assumed capacity, below the HIGH threshold).
+     TRIGGER: critical input reconstructed
+       -> [DATA QUALITY WARNING] Treat this forecast as low-confidence and prioritize confirmation of critical telemetry.
+          REASON: critical 24h demand input was reconstructed from the nearest available earlier day (telemetry gap)
+     TRIGGER: comfortable point forecast, uncomfortable upper band
+       -> [PREPARE] Prepare for the upper-demand scenario rather than relying only on the central forecast.
+          REASON: P50 suggests 82% of assumed capacity, but P90 reaches 91% -- the central forecast alone could understate the event.
+
+  -- 2025-06-12 (peak block 2025-06-12 23:00:00, 24.0h from issue) --
+     INPUT STATE: P50 7,795.2 MW (87%) | P90 8,417.6 MW (94%) | reliability MEDIUM | stress 62.4 (WATCH) | peak_risk MODERATE | main driver: P90 near capacity (94%)
+     TRIGGER: moderate peak risk
+       -> [MONITOR] Increase monitoring attention ahead of the forecast peak.
+          REASON: Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold).
+     TRIGGER: secondary input reconstructed/incomplete
+       -> [DATA QUALITY WARNING (lighter)] Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.
+          REASON: 48h demand input was reconstructed (telemetry gap on the preceding day)
+     TRIGGER: comfortable point forecast, uncomfortable upper band
+       -> [PREPARE] Prepare for the upper-demand scenario rather than relying only on the central forecast.
+          REASON: P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event.
+
+  -- 2025-06-13 (peak block 2025-06-13 23:00:00, 24.0h from issue) --
+     INPUT STATE: P50 7,874.9 MW (87%) | P90 8,423.3 MW (94%) | reliability HIGH | stress 54.9 (WATCH) | peak_risk MODERATE | main driver: P90 near capacity (94%)
+     TRIGGER: moderate peak risk
+       -> [MONITOR] Increase monitoring attention ahead of the forecast peak.
+          REASON: Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold).
+     TRIGGER: comfortable point forecast, uncomfortable upper band
+       -> [PREPARE] Prepare for the upper-demand scenario rather than relying only on the central forecast.
+          REASON: P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event.
+     TRIGGER: a specific utility modeled near its own reference
+       -> [MONITOR] Increase monitoring attention on BYPL (modeled relative stress 90%) -- do not assume it is automatically BRPL, the utility with the largest modeled MW contribution.
+          REASON: BRPL carries the largest modeled MW contribution (44%), but BYPL shows the highest modeled relative stress (90% of its own 2025 reference) -- contribution and relative stress point to different utilities.
+
+  MAIN PEAK EVENT -- 2025-06-12 23:00:00, evaluated at TWO 'now' checkpoints using the SAME
+  already-computed forecast (this project's model issues one 24h-ahead forecast; it does not
+  re-forecast closer to real time -- see Section 8):
+
+  -- checkpoint: 24h before peak (original issue time) --
+     [MONITOR] Increase monitoring attention ahead of the forecast peak.   (trigger: moderate peak risk)
+     [DATA QUALITY WARNING (lighter)] Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.   (trigger: secondary input reconstructed/incomplete)
+     [PREPARE] Prepare for the upper-demand scenario rather than relying only on the central forecast.   (trigger: comfortable point forecast, uncomfortable upper band)
+
+  -- checkpoint: 2h before peak (same forecast, later 'now') --
+     [MONITOR] Increase monitoring attention ahead of the forecast peak.   (trigger: moderate peak risk)
+     [DATA QUALITY WARNING (lighter)] Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.   (trigger: secondary input reconstructed/incomplete)
+     [PREPARE] Prepare for the upper-demand scenario rather than relying only on the central forecast.   (trigger: comfortable point forecast, uncomfortable upper band)
+  HONEST RESULT: on this real day, peak_risk stays MODERATE at both checkpoints (P90 94% of assumed capacity never reaches the HIGH threshold), so the two checkpoints above produce the SAME categories -- the DEMAND RESPONSE trigger requires peak_risk in {HIGH, CRITICAL}, which this real event never reaches (see Section 8/Phase 8: 12 June stays at WATCH, below the HIGH stress threshold). The proximity arithmetic (hours_to_peak) is genuine and did change between the two checkpoints; it simply had no real day in this test period where a HIGH/CRITICAL peak_risk state existed to act on it. A labeled demonstration of the proximity split itself follows the decision card below (Section 7).
+
+====================================================================================================
+## 6. False-alarm / over-alert check (all 61 test days)
+====================================================================================================
+  61 test days evaluated (each at its own 24h-ahead issue checkpoint).
+  Days producing ONLY 'no immediate action beyond routine monitoring': 54 (89%)
+  Category firing counts across all days:
+    MONITOR (routine)               54 days (  89%)
+    MONITOR                          9 days (  15%)
+    PREPARE                          7 days (  11%)
+    DATA QUALITY WARNING             1 days (   2%)
+    DATA QUALITY WARNING (lighter)   1 days (   2%)
+  This confirms the engine does NOT force every day into a warning: a majority of ordinary test
+  days resolve to routine monitoring only, and escalated categories fire on a minority of days,
+  concentrated around the real June heat event -- consistent with 'avoid alarm fatigue'.
+
+====================================================================================================
+## 7. Example final decision card -- 2025-06-12 (main peak event, 2h-before-peak checkpoint)
+====================================================================================================
+{
+  "PEAK_RISK": "MODERATE",
+  "RELIABILITY": "MEDIUM",
+  "MAIN_DRIVER": "P90 near capacity (94%)",
+  "MODELED_AREA_OF_CONCERN": "BYPL -- highest relative stress (89% of own 2025 reference)",
+  "LARGEST_MODELED_CONTRIBUTION": "BRPL (44% of Delhi modeled peak)",
+  "ADVISORIES": [
+    {
+      "category": "MONITOR",
+      "trigger": "moderate peak risk",
+      "advisory": "Increase monitoring attention ahead of the forecast peak.",
+      "reason": "Peak risk is MODERATE (P90 94% of assumed capacity, below the HIGH threshold)."
+    },
+    {
+      "category": "DATA QUALITY WARNING (lighter)",
+      "trigger": "secondary input reconstructed/incomplete",
+      "advisory": "Treat this forecast with moderate caution; some inputs were reconstructed or incomplete.",
+      "reason": "48h demand input was reconstructed (telemetry gap on the preceding day)"
+    },
+    {
+      "category": "PREPARE",
+      "trigger": "comfortable point forecast, uncomfortable upper band",
+      "advisory": "Prepare for the upper-demand scenario rather than relying only on the central forecast.",
+      "reason": "P50 suggests 87% of assumed capacity, but P90 reaches 94% -- the central forecast alone could understate the event."
+    }
+  ]
+}
+
+====================================================================================================
+  PROOF the CONSERVATION ADVISORY and DEMAND RESPONSE rules are live code, not dead code: no
+  real test day reached HIGH/CRITICAL peak_risk or stress (Section 5/6 above), so neither fired
+  on real history. Applying them to the Phase 10 What-If '+5C' scenario (stress 79.3, HIGH; P90
+  96.7% of assumed capacity -- real outputs from that phase, not invented here) shows both rules
+  firing correctly when the input state actually warrants it. This also carries the
+  hours_to_peak proximity check that Section 5 could not demonstrate on real data, since it
+  needs a HIGH/CRITICAL peak_risk state to have any effect:
+    -- 24h to peak (not yet imminent) --
+      [PREPARE] Prepare additional reserve/capacity ahead of the forecast peak.
+      [DATA QUALITY WARNING] Treat this forecast as low-confidence and prioritize confirmation of critical telemetry.
+      [MONITOR] Increase monitoring attention on BYPL (modeled relative stress 92%) -- do not assume it is automatically BRPL, the utility with the largest modeled MW contribution.
+      [CONSERVATION ADVISORY] Issue a public conservation advisory encouraging reduced non-essential demand during the forecast peak window.
+    -- 2h to peak (imminent) --
+      [DEMAND RESPONSE] Consider peak-period demand-response measures for the next few hours.
+      [DATA QUALITY WARNING] Treat this forecast as low-confidence and prioritize confirmation of critical telemetry.
+      [MONITOR] Increase monitoring attention on BYPL (modeled relative stress 92%) -- do not assume it is automatically BRPL, the utility with the largest modeled MW contribution.
+      [CONSERVATION ADVISORY] Issue a public conservation advisory encouraging reduced non-essential demand during the forecast peak window.
+  Confirms the proximity split works as designed: the SAME HIGH-risk state produces PREPARE at
+  24h and switches to DEMAND RESPONSE at 2h -- demonstrated here on a labeled What-If input
+  because no real test day reached the HIGH/CRITICAL peak_risk this trigger requires.
+
+====================================================================================================
+## 8. Limitations
+====================================================================================================
+  - This project's forecast is issued ONCE, 24h ahead, and is never refreshed closer to real
+    time. The 'hours_to_peak' proximity trigger is genuine arithmetic, but it is demonstrated
+    here at a manually chosen 'now' checkpoint (2h before peak) using the SAME static forecast,
+    not a live-updating one. An operational version would need a forecast that re-issues through
+    the day, which does not exist in this project.
+  - Neither DEMAND RESPONSE nor CONSERVATION ADVISORY fired on any real test day (Section 5/6):
+    peak_risk never reached HIGH/CRITICAL in this 61-day test period, so the proximity split
+    (PREPARE at 24h vs DEMAND RESPONSE at 2h) could only be demonstrated on the labeled Phase 10
+    What-If '+5C' input above, not on real history -- disclosed rather than glossed over.
+  - The rule thresholds (2h proximity, 90% DISCOM relative-stress, the peak-risk/stress-level
+    bands themselves) are judgment calls, consistent with earlier phases' documented bands, not
+    independently validated against real operator decisions or outcomes.
+  - DISCOM advisories inherit every limitation disclosed in Phase 11 -- BRPL/BYPL modeled from a
+    same-day source, TPDDL from a single differently-dated source, NDMC/MES not modeled
+    individually at all.
+  - The CONSERVATION ADVISORY and DEMAND RESPONSE rules never fired on real historical test data
+    (Section 6) -- their correctness rests on the What-If demonstration above, not on a real
+    historical activation.
+  - This is a rule table over the SAME single forecast used throughout the project; it does not
+    reason about anything the forecast itself cannot see (fuel supply, generator outages,
+    transmission constraints) -- it is strictly downstream of the demand-side model.
+
+====================================================================================================
+## 9. Recommendation
+====================================================================================================
+  CORE PRODUCT FEATURE. It is the first layer that turns every earlier phase's output (P50/P90,
+  reliability, stress, risk, DISCOM allocation) into something a non-technical operator could act
+  on without reading a report -- and it does so without ever exceeding what the underlying data
+  supports: every advisory traces to a real backend field, uses advisory (not command) language,
+  and stays silent on ordinary days (Section 6: most test days resolve to routine monitoring).
+  It should NOT be simplified further -- the reliability-aware and DISCOM contribution-vs-stress
+  distinctions are exactly the nuance this project has spent multiple phases establishing, and
+  collapsing them into a single generic 'risk: high/low' would throw that away.

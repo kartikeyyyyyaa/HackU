@@ -1,0 +1,255 @@
+PHASE 11 -- DISCOM-LEVEL LOCALIZATION
+====================================================================================================
+
+====================================================================================================
+## 1. Data sources found
+====================================================================================================
+  a) THIS PROJECT'S OWN DATA (data/load_data.csv, data/delhi_weather_*.csv):
+     Delhi-wide 5-min SLDC demand only (source: Kaggle mirror of Delhi SLDC), plus Delhi-wide
+     weather. Verified by directory listing: NO column, file, or field anywhere in this project
+     names or attributes any value to BRPL, BYPL, TPDDL, NDMC, or MES. Confirmed: (A) direct
+     DISCOM-level historical demand data is NOT available in this project.
+
+  b) EXTERNAL, PUBLICLY REPORTED figures located via web search (not part of this project's
+     dataset -- used only to build a disclosed allocation ratio, per (B)):
+
+  source                                                            date  utility      MW   measured/reported
+------------------------------------------------------------------------------------------------------------
+  thepatriot.in, 'At 8,423 MW, Delhi breaks 2025 peak demand record'  2025-06-12Delhi total   8,423SLDC-reported (15:06 IST)
+    same article                                              2025-06-12     BRPL   3,747utility-reported, same-day
+    same article                                              2025-06-12     BYPL   1,832utility-reported, same-day
+    same article                                              2025-06-12BRPL (2025 season expectation)   4,050utility's own stated forecast
+    same article                                              2025-06-12BYPL (2025 season expectation)   1,900utility's own stated forecast
+  theprint.in, 'Delhi's peak demand soars to season's highest 8231 MW'  2026-05-21Delhi total   8,231SLDC-reported, season-to-date
+    same article                                              2026-05-21     BRPL   3,762utility-reported, season-to-date
+    same article                                              2026-05-21     BYPL   1,838utility-reported, season-to-date
+    same article                                              2026-05-21    TPDDL   2,331utility-reported, season-to-date
+  Tata Power-DDL press release, 'TPDDL continues to meet demand efficiently'  2025-04-02TPDDL (2025 season expectation)   2,562utility's own official forecast
+------------------------------------------------------------------------------------------------------------
+  NDMC and MES: despite multiple targeted searches (news archives, DERC filings, TPDDL/BSES
+  press releases, RMI Delhi grid report), NO dated MW or percentage figure for either utility
+  was located. This is disclosed as a finding, not glossed over: Finding (C) applies to NDMC
+  and MES specifically -- no sufficiently defensible utility-level figure exists for them.
+  RESOLUTION: (B) applies to BRPL, BYPL and TPDDL (disclosed allocation ratios below). NDMC and
+  MES are carried ONLY as an undecomposed combined residual -- never assigned an individual
+  number.
+
+====================================================================================================
+## 2. What is directly measured vs estimated
+====================================================================================================
+  DIRECTLY MEASURED (by this project): Delhi-wide 5-min SLDC demand, resampled to 15-min --
+  this is the ONLY demand quantity this project actually observes.
+  REPORTED (by third parties, not measured by this project): the MW figures in the source table
+  above -- each is a same-utility, dated news or company report; not independently verified by
+  us, and treated as data, not ground truth.
+  MODELED ESTIMATE (computed by this script): every per-DISCOM number attached to our own
+  forecast below. These are the Delhi-wide P50/P90 multiplied by a disclosed ratio -- NOT an
+  independent per-DISCOM forecast, and NEVER to be described as 'live' or 'measured'.
+
+PRE-FLIGHT CHECK: locked pipeline reproduced 5,817 test blocks, Delhi P50 at the known
+season peak = 7,795.2 MW (P90 8,417.6) -- identical to Phase 7-10. Nothing about the demand model changes in this phase.
+
+====================================================================================================
+## 3. Recommended localization method
+====================================================================================================
+  METHOD B: a disclosed allocation-ratio approach derived from credible, dated, reported
+  record-day figures (Section 1), applied by simple proportional scaling to our own Delhi-wide
+  P50/P90 forecast. This is NOT an independent per-DISCOM model -- there is no per-DISCOM
+  training data to fit one. Every per-DISCOM number below is explicitly a MODELED ESTIMATE.
+
+====================================================================================================
+## 4. Ratio derivation
+====================================================================================================
+  BRPL share, 2025-06-12 (same-day actual, same date as our dataset's peak): 3,747/8,423 = 44.49%
+  BYPL share, 2025-06-12 (same-day actual): 1,832/8,423 = 21.75%
+  BRPL share, 2026-05-21 (season-to-date, independent later date): 3,762/8,231 = 45.71%
+  BYPL share, 2026-05-21 (season-to-date): 1,838/8,231 = 22.33%
+  TPDDL share, 2026-05-21 (season-to-date -- the ONLY dated TPDDL figure found; no 2025-06-12
+  TPDDL actual could be located despite search): 2,331/8,231 = 28.32%
+
+  CHOSEN RATIOS (used for all forecasts below):
+    BRPL                 44.49%
+    BYPL                 21.75%
+    TPDDL                28.32%
+    NDMC_MES_RESIDUAL     5.44%
+  BRPL and BYPL use the 2025-06-12 SAME-DAY figures (most relevant to our forecast period).
+  TPDDL uses the only sourced figure available (2026-05-21, a different year) -- flagged as a
+  weaker, single-source estimate throughout this report, not equal-confidence to BRPL/BYPL.
+  NDMC + MES: the residual after BRPL+BYPL+TPDDL (5.44%) is
+  carried as a SINGLE undecomposed bucket. No individual NDMC or MES number is produced --
+  no sourced data exists to split this residual credibly.
+
+====================================================================================================
+## 5. Consistency checks
+====================================================================================================
+  Do the shares approximately sum to 100%? BRPL+BYPL+TPDDL = 94.56%, leaving 5.44% for NDMC+MES -- plausible: NDMC (Lutyens' Delhi, a small
+  area) and MES (Delhi Cantonment, defence-administered, often outside standard DERC-regulated
+  DISCOM reporting) are both widely understood to be minor relative to the three main DISCOMs;
+  a single-digit combined residual is directionally consistent with that, though not itself
+  independently verified.
+  Same total-demand definition? Both source dates report an SLDC-measured citywide peak MW
+  figure, the same basis our own Delhi-wide model is trained on (SLDC-derived demand) -- yes.
+  Comparable dates? BRPL/BYPL: 2025-06-12 is the SAME DAY as our project's own known season
+  peak -- as comparable as a date can be. TPDDL: 2026-05-21 is a different YEAR (though the
+  same pre-monsoon summer season) -- a real, disclosed limitation, not hidden.
+  Reconcilable utilities? BRPL and BYPL are cross-checked below (Section 6) against an
+  independent date and reconcile within ~3%. TPDDL has only one source and cannot be
+  cross-checked this way. NDMC/MES cannot be reconciled at all -- no data exists for either.
+
+====================================================================================================
+## 6. Historical sanity check
+====================================================================================================
+  The BRPL/BYPL ratios above were derived ONLY from 2025-06-12. Here they are applied, WITHOUT
+  any adjustment, to the INDEPENDENT 2026-05-21 total (8,231 MW) and compared against that day's
+  OWN separately reported BRPL/BYPL figures -- an honest out-of-sample check, not a circular one:
+    BRPL: ratio (from 6/12/25) x 8,231 MW = 3,662 MW predicted vs 3,762 MW actually reported on 5/21/26  ->  error -2.7%
+    BYPL: ratio (from 6/12/25) x 8,231 MW = 1,790 MW predicted vs 1,838 MW actually reported on 5/21/26  ->  error -2.6%
+  Both within +-3%, roughly a year apart, on genuinely independent data -- reasonable evidence
+  the BRPL/BYPL ratios are stable, though this is ONE cross-check on ONE pair of dates, not a
+  large validated sample. No threshold or ratio was adjusted after seeing this result.
+  TPDDL cannot be sanity-checked this way -- only one dated figure exists for it, and it was
+  used to derive the ratio itself, so there is no independent data left to test against.
+
+====================================================================================================
+  RELATIVE STRESS REFERENCE (Step 5): no verified DISCOM engineering capacity exists in any
+  source found, so none is invented. Instead, each DISCOM's OWN publicly stated 2025-season
+  expected peak (Section 1) is used as a relative reference -- 'how does our modeled estimate
+  compare with what this utility itself said it expected to see this summer', not 'true % of
+  wire/transformer capacity used'.
+====================================================================================================
+    BRPL     own stated 2025-season expected peak: 4,050 MW (source: Section 1)
+    BYPL     own stated 2025-season expected peak: 1,900 MW (source: Section 1)
+    TPDDL    own stated 2025-season expected peak: 2,562 MW (source: Section 1)
+    NDMC / MES: no stated reference found -- no relative-stress figure is computed for them.
+
+====================================================================================================
+## 7. Forecasted utility-level results
+====================================================================================================
+
+  -- 2025-06-11 (Delhi peak block 2025-06-11 15:30:00) --
+     Delhi P50 7,371.4 MW | P90 8,230.7 MW | actual 7,627.7 MW | reliability LOW
+     DISCOM                    P50 MW    P90 MW   share   vs own 2025 ref (P50/P90)
+     BRPL                     3,279.2   3,661.4   44.5%                   81% / 90%
+     BYPL                     1,603.3   1,790.2   21.8%                   84% / 94%
+     TPDDL                    2,087.6   2,330.9   28.3%                   82% / 91%
+     NDMC MES UNDECOMPOSED      401.4     448.2    5.4%          n/a (no reference)
+
+  -- 2025-06-12 (Delhi peak block 2025-06-12 23:00:00) --
+     Delhi P50 7,795.2 MW | P90 8,417.6 MW | actual 8,392.6 MW | reliability MEDIUM
+     DISCOM                    P50 MW    P90 MW   share   vs own 2025 ref (P50/P90)
+     BRPL                     3,467.7   3,744.6   44.5%                   86% / 92%
+     BYPL                     1,695.4   1,830.8   21.8%                   89% / 96%
+     TPDDL                    2,207.6   2,383.8   28.3%                   86% / 93%
+     NDMC MES UNDECOMPOSED      424.4     458.3    5.4%          n/a (no reference)
+
+  -- 2025-06-13 (Delhi peak block 2025-06-13 23:00:00) --
+     Delhi P50 7,874.9 MW | P90 8,423.3 MW | actual 7,850.0 MW | reliability HIGH
+     DISCOM                    P50 MW    P90 MW   share   vs own 2025 ref (P50/P90)
+     BRPL                     3,503.2   3,747.1   44.5%                   86% / 92%
+     BYPL                     1,712.8   1,832.1   21.8%                   90% / 96%
+     TPDDL                    2,230.1   2,385.5   28.3%                   87% / 93%
+     NDMC MES UNDECOMPOSED      428.8     458.6    5.4%          n/a (no reference)
+
+  MAIN PEAK EVENT -- 2025-06-12 23:00:00 (known season peak, 8,392.6 MW actual):
+{
+  "delhi_forecast_mw": {
+    "p50": 7795.2,
+    "p90": 8417.6
+  },
+  "discoms": {
+    "BRPL": {
+      "p50_mw": 3467.7,
+      "p90_mw": 3744.6,
+      "share": 0.4449,
+      "status": "MODELED ESTIMATE",
+      "relative_to_own_2025_expected_peak_p50": 0.856,
+      "relative_to_own_2025_expected_peak_p90": 0.925
+    },
+    "BYPL": {
+      "p50_mw": 1695.4,
+      "p90_mw": 1830.8,
+      "share": 0.2175,
+      "status": "MODELED ESTIMATE",
+      "relative_to_own_2025_expected_peak_p50": 0.892,
+      "relative_to_own_2025_expected_peak_p90": 0.964
+    },
+    "TPDDL": {
+      "p50_mw": 2207.6,
+      "p90_mw": 2383.8,
+      "share": 0.2832,
+      "status": "MODELED ESTIMATE",
+      "relative_to_own_2025_expected_peak_p50": 0.862,
+      "relative_to_own_2025_expected_peak_p90": 0.93
+    },
+    "NDMC_MES_UNDECOMPOSED": {
+      "p50_mw": 424.4,
+      "p90_mw": 458.3,
+      "share": 0.0544,
+      "status": "RESIDUAL -- NOT INDIVIDUALLY SOURCED",
+      "note": "combined NDMC+MES; no data exists to split this further"
+    }
+  }
+}
+
+====================================================================================================
+## 8. Contribution vs relative-risk interpretation
+====================================================================================================
+  CONTRIBUTION = the fixed allocation share (Section 4) -- by construction, BRPL is always the
+  largest contributor (44.5% of every modeled block) and always will be, since contribution is a
+  static ratio, not a forecast quantity.
+  RELATIVE STRESS = modeled demand vs that DISCOM's OWN stated 2025 reference peak -- this DOES
+  vary block to block, because it depends on the Delhi-wide forecast level, not just the ratio.
+  At the main peak event above:
+    BRPL: contribution 44.5% of Delhi's modeled peak, but relative stress (P50 vs own 2025 reference) = 86%
+    BYPL: contribution 21.8% of Delhi's modeled peak, but relative stress (P50 vs own 2025 reference) = 89%
+    TPDDL: contribution 28.3% of Delhi's modeled peak, but relative stress (P50 vs own 2025 reference) = 86%
+  Ranked by CONTRIBUTION: BRPL > TPDDL > BYPL
+  Ranked by RELATIVE STRESS: BYPL > TPDDL > BRPL
+  These rankings DIFFER: BRPL carries the largest absolute modeled load, but
+  BYPL is modeled as proportionally closer to what it itself said it expected
+  this summer -- exactly the 'largest share is not the same as highest relative risk'
+  distinction this phase was asked to preserve. This emerged from the sourced numbers, not
+  from the design of the measure.
+
+====================================================================================================
+## 9. Credibility limitations
+====================================================================================================
+  - BRPL and BYPL ratios rest on ONE same-day actual (2025-06-12) plus ONE independent
+    out-of-sample check (2026-05-21) -- two data points, not a validated time series. A single
+    unusual day could bias the ratio; we have no way to detect that with only two dates.
+  - TPDDL's ratio rests on a SINGLE source, from a different year than our forecast period, with
+    NO independent cross-check available. It is materially weaker evidence than BRPL/BYPL and is
+    labeled as such everywhere it appears.
+  - NDMC and MES have ZERO individual sourced data. Their combined residual share is an
+    arithmetic leftover, not a reported or modeled quantity in its own right -- it could equally
+    represent NDMC and MES, or unreconciled measurement differences between the two total-demand
+    sources (SLDC same-day vs SLDC season-to-date), or simple rounding in the news reports.
+  - The allocation ratio is a FIXED proportion applied uniformly across all 15-min blocks, all
+    hours, and both weekday/weekend. There is no evidence in this project that DISCOM shares are
+    actually constant across time of day or season -- this is an assumption of the method, not a
+    demonstrated fact. A DISCOM with more commercial (daytime) load than residential (evening)
+    load, for example, would violate this assumption and this method would not detect it.
+  - The 'relative stress' reference (own 2025 stated expected peak) is each utility's OWN
+    forecast of its own demand, not an engineering or contractual capacity limit. A DISCOM
+    exceeding its own earlier forecast is not the same as approaching an actual grid constraint.
+  - No DISCOM-level uncertainty (P10/P90 spread specific to that DISCOM) exists -- the P50/P90
+    shown per DISCOM is just the Delhi-wide band scaled by the same fixed ratio, which assumes
+    each DISCOM's forecast uncertainty is proportional to Delhi's -- untested.
+
+====================================================================================================
+## 10. Should this feature be included in the final product?
+====================================================================================================
+  DECISION: YES, WITH CLEAR 'MODELED ESTIMATE' LABEL -- scoped to BRPL, BYPL, and TPDDL only.
+  NDMC and MES are shown ONLY as a combined, explicitly undecomposed residual, never as
+  individual figures.
+  Why YES rather than NO: two of the three included DISCOMs (BRPL, BYPL) have a same-day sourced
+  figure from the exact date of our own dataset's known peak, plus a genuine, non-circular
+  out-of-sample check that reconciled within 3%. That clears a real bar of credibility -- this
+  is not a guess.
+  Why WITH LABEL and not an unqualified YES: TPDDL rests on a single, differently-dated source;
+  NDMC/MES have no source at all; and the method assumes time-invariant shares, which is not
+  demonstrated. Every one of these must stay visible to whoever uses this feature, not buried in
+  a methodology note.
+  Why not NO: declining to build anything would discard two DISCOMs' worth of genuinely
+  cross-validated, dated, sourced evidence -- the credibility bar in the brief is 'defensible',
+  not 'perfect', and BRPL/BYPL clear it.

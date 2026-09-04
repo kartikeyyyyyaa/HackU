@@ -1,0 +1,13 @@
+PHASE 1c -- baseline + real temperature (real data, held-out validation)
+==============================================================================
+[CONFIRMED] Weather range: 2023-04-01 00:00:00 to 2026-01-12 23:00:00 (24,432 hourly readings, Open-Meteo)
+[CONFIRMED->INFERENCE] Temperature upsampled hourly->15min via time-interpolation (weather itself changes slowly, this is a standard and defensible step)
+[CONFIRMED] Rows with both real demand and real temperature available: 97,725
+[CONFIRMED] Train: before 2025-05-01 (70,176 blocks) | Test: 2025-05-01 to 2025-06-30 (5,738 blocks)
+
+[CONFIRMED] Same model, same split, calendar+lag only (no weather): MAPE = 1.12%
+[CONFIRMED] Same model + real temperature + cooling-degree terms:  MAPE = 1.06%
+[CONFIRMED] Weather's effect on this summer window: +0.06 pp MAPE
+
+[CONFIRMED] Highest actual demand block: 2025-06-12 23:00:00 -> 8392.6 MW (temp: 34.7C)
+[CONFIRMED] Weather-aware model's prediction for that block: 8282.1 MW (error: -110.4 MW, 1.32%)

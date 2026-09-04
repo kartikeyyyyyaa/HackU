@@ -1,0 +1,19 @@
+PHASE 1 REPORT -- baseline demand forecast (real data, held-out validation)
+==============================================================================
+[CONFIRMED] Raw rows: 293,184 | duplicate timestamps dropped: 0
+[CONFIRMED] Date range: 2023-04-01 00:00:00 to 2026-01-12 23:55:00
+[CONFIRMED] Missing 5-min timestamps vs a complete calendar: 0 (0.00%)
+[CONFIRMED] Rows dropped as physically implausible (<=0 MW or >15,000 MW): 0
+[CONFIRMED->INFERENCE] Resampled to 15-min blocks: 97,728 blocks; 2,306 empty blocks, gaps up to 1hr linearly interpolated (labeled, not hidden)
+[CONFIRMED] Feature set: calendar (hour-of-day, day-of-year Fourier terms, weekend flag) + lag features (15min/1day/1week ago). NOTE: weather is NOT yet included -- Phase 1 tests whether load pattern alone is predictive; weather is a planned Phase 1b addition.
+[CONFIRMED] Train: 2023-04-08 00:00:00 to 2025-11-28 23:30:00 (90,270 blocks)
+[CONFIRMED] Test (held out, never seen by the model): 2025-11-28 23:45:00 to 2026-01-12 23:45:00 (4,050 blocks)
+
+[CONFIRMED] Naive baseline (persistence: same 15-min block last week)
+            MAPE = 4.81%   RMSE = 226.9 MW
+
+[CONFIRMED] Phase-1 model: OLS linear regression on calendar + lag features (numpy, no external ML lib)
+            MAPE = 1.83%   RMSE = 83.9 MW
+            Improvement over naive baseline: +2.97 pp MAPE
+
+[CONFIRMED] Test-period predictions saved to outputs/phase1_test_predictions.csv (4,050 rows)

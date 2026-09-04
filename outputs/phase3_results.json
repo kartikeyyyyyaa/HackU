@@ -1,0 +1,58 @@
+{
+  "point": {
+    "MAPE": 6.329921927454651,
+    "MAE": 343.4011328874626,
+    "RMSE": 478.0722834593266,
+    "PeakMAPE": 7.473103095333341
+  },
+  "conditional": {
+    "label": "conditional (P10/P90 regression)",
+    "coverage_all": 72.85542375795083,
+    "coverage_highdemand": 67.35395189003437,
+    "coverage_dailypeaks": 75.40983606557377,
+    "breach_upper": 9.83324737837373,
+    "breach_lower": 17.311328863675435,
+    "n_breach_upper": 572,
+    "n_breach_lower": 1007,
+    "width_mean": 833.7521237140126,
+    "width_pct_of_actual": 15.268244735968295,
+    "width_offpeak": 810.6906424394673,
+    "width_peak": 1041.1865815701026,
+    "pinball_lo": 102.45265233687483,
+    "pinball_hi": 76.30839700957482
+  },
+  "fixed_width": {
+    "label": "fixed-width (global residual quantiles)",
+    "coverage_all": 63.74419804022692,
+    "coverage_highdemand": 40.37800687285223,
+    "coverage_dailypeaks": 49.18032786885246,
+    "breach_upper": 16.176723396940005,
+    "breach_lower": 20.079078562833075,
+    "n_breach_upper": 941,
+    "n_breach_lower": 1168,
+    "width_mean": 658.0497374349961,
+    "width_pct_of_actual": 12.371730487639583,
+    "width_offpeak": 658.049737434996,
+    "width_peak": 658.049737434996,
+    "pinball_lo": 109.42342977372999,
+    "pinball_hi": 80.91344804417368
+  },
+  "calibration_selfcheck": {
+    "below_P10_pct": 10.040814075340577,
+    "below_P90_pct": 89.9619436324527
+  },
+  "known_peak": {
+    "ts": "2025-06-12 23:00:00",
+    "actual": 8392.566666666668,
+    "P10": 7105.555389986078,
+    "P50": 7601.880652833133,
+    "P90": 8276.536992056434,
+    "inside_band": false
+  },
+  "daily_peaks": {
+    "n": 61,
+    "p50_under_5": 30,
+    "p50_under_10": 7,
+    "captured_by_p90": 48
+  }
+}

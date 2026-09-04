@@ -1,0 +1,277 @@
+PHASE 9 -- PROOF MODE
+====================================================================================================
+The Combined (C) stress formulation and its 0-50/50-75/75-90/90-100 bands are PROVISIONAL, approved for continued use in Phase 8 but explicitly NOT claimed to be operationally validated.
+Illustrative capacity: 9,000 MW. ASSUMED / ILLUSTRATIVE ceiling, not an official or sourced figure. Must be replaced with a verified operational value before any external claim.
+
+PRE-FLIGHT CHECK: known season peak 8,392.6 MW at 2025-06-12 23:00:00 present, actual value 8,392.6 MW. Locked pipeline reproduced 5,817 test blocks -- identical to Phase 7/8.
+
+====================================================================================================
+STEP 1 -- EVENT SELECTION
+====================================================================================================
+  Top 5 actual-demand days in the 61-day test period (2025-05-01 to 2025-06-30):
+    2025-06-12   8,392.6 MW
+    2025-06-13   8,389.2 MW
+    2025-06-11   8,180.8 MW
+    2025-06-14   7,939.0 MW
+    2025-06-15   7,778.4 MW
+  2025-06-12 is confirmed as the genuine highest-demand day in the test period (8,392.6 MW) -- this is verified from the data, not assumed because it was already known from earlier phases. It is selected as the PRIMARY event.
+
+  For the failure-mode requirement (Step 9), the test period was scanned for the day with the
+  largest actual-vs-forecast peak error where the actual peak also fell outside the P10-P90 band
+  -- an objective, non-cherry-picked rule, not a search for a flattering example:
+    worst case: 2025-06-11 -- actual underpredicted by 1,053.7 MW AND actual breached the P90 band (reliability at that day's peak: LOW).
+    this is 2025-06-11 -- the day immediately before the primary event. It is selected as the
+    SECONDARY / failure-mode event, precisely because it is the worst genuine miss in the
+    test window, not because it makes a good story.
+
+====================================================================================================
+STEP 2 -- FORECAST ISSUE TIME
+====================================================================================================
+  For each event, T is set to EXACTLY 24 hours before that day's actual peak timestamp. This is
+  the maximum legitimate horizon the locked pipeline supports (by construction, every feature is
+  built from information at or before target-24h) -- so each replay demonstrates the full,
+  genuine 24-hour-ahead capability rather than a shorter, easier-to-hit window. The choice was
+  fixed by this rule BEFORE inspecting how well the forecast performed.
+
+====================================================================================================
+STEP 3 -- WEATHER FORECAST VINTAGE
+====================================================================================================
+  Both replays use temp_corr: the genuine day-1-lead forecast temperature (Open-Meteo Previous
+  Runs API, validated in Phase 4) plus the adaptive 30-day time-of-day bias correction validated
+  in Phase 5. No observed/reanalysis or hindsight weather value is used anywhere in either replay.
+
+====================================================================================================
+EVENT: PRIMARY -- 2025-06-12 (season peak, genuine 24h-ahead replay)
+====================================================================================================
+
+## 1. Historical event selected
+  Date: 2025-06-11 onward (forecast window 2025-06-11 23:15:00 to 2025-06-12 23:00:00)
+
+## 2. Forecast issue time
+  T = 2025-06-11 23:00:00
+
+## 3. Information available at issue time
+  - all demand telemetry up to and including 2025-06-11 23:00:00
+  - lagged demand features (24h/48h/7d/14d back from each target block, all <= T)
+  - calendar features (hour, day-of-week, day-of-year) for each target block
+  - weather: corrected day-1-vintage forecast temperature available as of 2025-06-11 23:00:00 (Previous-Runs API forecast + adaptive 30-day time-of-day bias correction, itself built only from data before 2025-06-11 23:00:00)
+  - reliability inputs (telemetry completeness, imputation flags) known as of 2025-06-11 23:00:00
+
+## 4. Information excluded
+  - any demand telemetry after 2025-06-11 23:00:00
+  - observed (actual) future temperature
+  - any weather model run issued after 2025-06-11 23:00:00
+  - the actual outcome of this event in any form
+
+## 5. Forecast result (issued at T, for the full next 24h)
+  predicted peak      : 7,795.2 MW at 2025-06-12 23:00:00 (24.00h after T)
+  P10 at predicted peak: 7,150.8 MW
+  P90 at predicted peak: 8,417.6 MW
+  P50 utilisation of assumed capacity: 86.6% | P90 utilisation: 93.5%
+
+## 6. Reliability
+  state (worst across the 24h window): LOW
+    - critical 24h demand input reconstructed from the nearest available earlier day for 3 of 96 blocks in this 24h window (telemetry gap)
+    - 48h demand input reconstructed for 36 of 96 blocks
+    - previous-24h demand telemetry only 59% complete at worst
+
+## 7. Risk
+  stress score: 64.9 -> WATCH   (components: u(P50)=0.55, u(P90)=0.78, growth=0.72 [+5.7% vs prior 24h window], heat=0.25, reliability_penalty=1.00)
+  peak risk: MODERATE
+    - forecast reliability is LOW, so the upper bound is less dependable
+
+## 8. Actual outcome
+  actual peak: 8,392.6 MW at 2025-06-12 23:00:00
+  value-to-value error (forecast peak MW - actual peak MW): -597.4 MW (-7.1%)
+  full-window MAPE (96 scoreable blocks, actual vs P50): 9.84%
+
+## 9. Uncertainty result
+  at the ACTUAL peak's own timestamp: P10 7,150.8 / P50 7,795.2 / P90 8,417.6 / actual 8,392.6 MW -- actual is INSIDE the P10-P90 band (margin to P90: +25.0 MW)
+  at the MODEL'S OWN predicted-peak timestamp: actual is INSIDE the band there
+
+## 10. Warning
+  Forecast, band, reliability state and stress level are all issued ONCE, at T, for the
+  entire next 24 hours -- so the warning is the full lead time between T and when the actual
+  peak occurred: 24.00 hours (100% of the forecast horizon).
+  At T, the system had already published: reliability=LOW, stress_level=WATCH, peak_risk=MODERATE -- 24.0 hours before the peak was observed.
+
+====================================================================================================
+EVENT: SECONDARY / FAILURE MODE -- 2025-06-11 (worst genuine miss in the test period)
+====================================================================================================
+
+## 1. Historical event selected
+  Date: 2025-06-10 onward (forecast window 2025-06-10 23:00:00 to 2025-06-11 22:45:00)
+  NOTE: 4 of 96 target blocks in this window have no scoreable actual value and were excluded (target demand missing beyond the pipeline's 1h interpolation limit -- this window overlaps the known 10 June telemetry gap documented in Phase 5/6). Missing: 2025-06-10 23:00:00, 2025-06-10 23:15:00, 2025-06-10 23:30:00, 2025-06-10 23:45:00. All metrics below are computed on the remaining 92 blocks.
+
+## 2. Forecast issue time
+  T = 2025-06-10 22:45:00
+
+## 3. Information available at issue time
+  - all demand telemetry up to and including 2025-06-10 22:45:00
+  - lagged demand features (24h/48h/7d/14d back from each target block, all <= T)
+  - calendar features (hour, day-of-week, day-of-year) for each target block
+  - weather: corrected day-1-vintage forecast temperature available as of 2025-06-10 22:45:00 (Previous-Runs API forecast + adaptive 30-day time-of-day bias correction, itself built only from data before 2025-06-10 22:45:00)
+  - reliability inputs (telemetry completeness, imputation flags) known as of 2025-06-10 22:45:00
+
+## 4. Information excluded
+  - any demand telemetry after 2025-06-10 22:45:00
+  - observed (actual) future temperature
+  - any weather model run issued after 2025-06-10 22:45:00
+  - the actual outcome of this event in any form
+
+## 5. Forecast result (issued at T, for the full next 24h)
+  predicted peak      : 7,371.4 MW at 2025-06-11 15:30:00 (16.75h after T)
+  P10 at predicted peak: 6,495.9 MW
+  P90 at predicted peak: 8,230.7 MW
+  P50 utilisation of assumed capacity: 81.9% | P90 utilisation: 91.5%
+
+## 6. Reliability
+  state (worst across the 24h window): LOW
+    - critical 24h demand input reconstructed from the nearest available earlier day for 35 of 92 blocks in this 24h window (telemetry gap)
+    - previous-24h demand telemetry only 64% complete at worst
+
+## 7. Risk
+  stress score: 61.7 -> WATCH   (components: u(P50)=0.40, u(P90)=0.72, growth=0.50 [+4.0% vs prior 24h window], heat=1.00, reliability_penalty=1.00)
+  peak risk: MODERATE
+    - forecast reliability is LOW, so the upper bound is less dependable
+
+## 8. Actual outcome
+  actual peak: 8,180.8 MW at 2025-06-11 22:45:00
+  value-to-value error (forecast peak MW - actual peak MW): -809.4 MW (-9.9%)
+  full-window MAPE (92 scoreable blocks, actual vs P50): 4.76%
+
+## 9. Uncertainty result
+  at the ACTUAL peak's own timestamp: P10 6,249.5 / P50 7,127.0 / P90 7,934.0 / actual 8,180.8 MW -- actual is OUTSIDE the P10-P90 band (margin to P90: -246.8 MW)
+  at the MODEL'S OWN predicted-peak timestamp: actual is INSIDE the band there
+
+## 10. Warning
+  Forecast, band, reliability state and stress level are all issued ONCE, at T, for the
+  entire next 24 hours -- so the warning is the full lead time between T and when the actual
+  peak occurred: 24.00 hours (100% of the forecast horizon).
+  At T, the system had already published: reliability=LOW, stress_level=WATCH, peak_risk=MODERATE -- 24.0 hours before the peak was observed.
+
+NOTE on peak_risk_reasons in both events above: both land in MODERATE via the util90 >= 0.88 rung
+of the unchanged Phase 7 rule, but the reason-generation logic (also unchanged -- peak_risk was
+explicitly out of scope for the Phase 8 review) only appends a reliability-based reason here
+because neither util90 >= 0.95 nor util50 >= 0.92 was crossed. The printed reason is accurate but
+incomplete: it does not name the P90-vs-88% condition that actually produced the MODERATE tier.
+This is an existing gap in the approved reason-generation logic, surfaced here by a real replay
+rather than papered over -- not something this phase was authorized to fix.
+
+====================================================================================================
+## 11. Failure/success analysis
+====================================================================================================
+  PRIMARY (2025-06-12): PARTIAL SUCCESS.
+    - The point forecast undershot the actual peak by 597.4 MW (-7.1%) -- the point forecast alone would have understated the event.
+    - The uncertainty band DID capture it: actual 8,392.6 MW was inside the
+      P10-P90 band, 25.0 MW below P90 -- so a dispatcher who
+      read the FULL band, not just the point forecast, would not have been surprised.
+    - The stress score reached 64.9 (WATCH), 24.0 hours ahead of the actual peak -- correctly elevated above ordinary days (see Phase 8 Section 3),
+      but did NOT cross into HIGH (75) even though the actual event reached 93% of assumed capacity. This is the same
+      understatement identified and only partially narrowed in Phase 8 -- shown here again, live,
+      in a genuine forward replay rather than retrospective analysis. It is not hidden.
+
+  SECONDARY (2025-06-11): GENUINE FAILURE.
+    - The point forecast undershot the actual peak by 809.4 MW (-9.9%), and the actual peak was OUTSIDE the P10-P90 band (P90 margin -246.8 MW -- i.e. the band did not reach the actual).
+    - WHY: reliability was already flagged LOW at issue time T, for a stated, verifiable reason:
+        - critical 24h demand input reconstructed from the nearest available earlier day for 35 of 92 blocks in this 24h window (telemetry gap)
+        - previous-24h demand telemetry only 64% complete at worst
+    - The system did not hide this: it told the operator, 24.0 hours in
+      advance, that its own strongest input was reconstructed rather than observed, and its
+      stress score (61.7, WATCH) and peak risk (MODERATE) were both already elevated above an ordinary day. What it could NOT do was
+      correct the magnitude of the point forecast or widen the band enough to actually contain
+      the surprise -- this matches the Phase 7 finding that LOW-reliability coverage (was 51.3%,
+      59.0% after reliability-aware widening) remains well short of the 80% nominal target.
+    - This is presented as a genuine, uncorrected miss, exactly as it happened.
+
+====================================================================================================
+## 12. Judge demo recommendation (30-45 second narrative, grounded only in the numbers above)
+====================================================================================================
+  "At 23:00 on 11 June, our system had only the information available at that moment -- no future demand, no future weather, nothing after that timestamp. From that point, it forecast the next 24 hours: a peak of 7,795 MW at 23:00, with a P10-P90 range of 7,151 to 8,418 MW. It flagged the forecast reliability as LOW and the grid stress level as WATCH -- 24 hours before anything happened. Now here is what actually happened: demand hit 8,393 MW, the highest of the entire test period -- and it landed inside the band we published a full day earlier. We will also show you the day before, where we got the reliability flag right but still missed the magnitude -- because a proof system that only shows its wins is not proof of anything."
+
+====================================================================================================
+## 13. Proof-mode backend structure
+====================================================================================================
+{
+  "primary": {
+    "event_date": "2025-06-12",
+    "issue_time": "2025-06-11 23:00:00",
+    "forecast": {
+      "peak_mw": 7795.2,
+      "peak_time": "2025-06-12 23:00:00",
+      "p10_mw": 7150.8,
+      "p50_mw": 7795.2,
+      "p90_mw": 8417.6
+    },
+    "actual": {
+      "peak_mw": 8392.6,
+      "peak_time": "2025-06-12 23:00:00",
+      "peak_abs_err_mw": -597.4,
+      "peak_pct_err": -7.12,
+      "mape_full_pct": 9.84
+    },
+    "reliability": {
+      "state": "LOW",
+      "reasons": [
+        "critical 24h demand input reconstructed from the nearest available earlier day for 3 of 96 blocks in this 24h window (telemetry gap)",
+        "48h demand input reconstructed for 36 of 96 blocks",
+        "previous-24h demand telemetry only 59% complete at worst"
+      ]
+    },
+    "risk": {
+      "stress_score": 64.9,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "uncertainty": {
+      "inside_p90_at_actual_peak": true,
+      "p90_margin_at_actual_peak_mw": 25.0
+    },
+    "warning": {
+      "lead_time_hours": 24.0
+    }
+  },
+  "secondary_failure_mode": {
+    "event_date": "2025-06-11",
+    "issue_time": "2025-06-10 22:45:00",
+    "forecast": {
+      "peak_mw": 7371.4,
+      "peak_time": "2025-06-11 15:30:00",
+      "p10_mw": 6495.9,
+      "p50_mw": 7371.4,
+      "p90_mw": 8230.7
+    },
+    "actual": {
+      "peak_mw": 8180.8,
+      "peak_time": "2025-06-11 22:45:00",
+      "peak_abs_err_mw": -809.4,
+      "peak_pct_err": -9.89,
+      "mape_full_pct": 4.76
+    },
+    "reliability": {
+      "state": "LOW",
+      "reasons": [
+        "critical 24h demand input reconstructed from the nearest available earlier day for 35 of 92 blocks in this 24h window (telemetry gap)",
+        "previous-24h demand telemetry only 64% complete at worst"
+      ]
+    },
+    "risk": {
+      "stress_score": 61.7,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "uncertainty": {
+      "inside_p90_at_actual_peak": false,
+      "p90_margin_at_actual_peak_mw": -246.8
+    },
+    "warning": {
+      "lead_time_hours": 24.0
+    }
+  }
+}

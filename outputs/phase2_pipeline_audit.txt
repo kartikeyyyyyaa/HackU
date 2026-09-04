@@ -1,0 +1,131 @@
+PHASE 2 -- PIPELINE DIAGNOSIS
+================================================================================================
+
+STEP 1 -- REPRODUCING PHASE 1d CHECKPOINTS FROM THE RAW FILE (not trusting earlier numbers)
+------------------------------------------------------------------------------------------------
+A. RAW CSV                 rows=293,184  min=2023-04-01 00:00:00  max=2026-01-12 23:55:00  max_demand=8,631.5 MW
+   duplicated timestamps: 0
+B. 15-MIN PROCESSED        rows=97,728  valid=96,701  min=2023-04-01 00:00:00  max=2026-01-12 23:45:00  max_demand=8,581.6 MW
+C. PHASE 1d TRAIN          rows=70,330  2023-04-08 00:00:00 -> 2025-04-30 23:30:00  max_demand=8,581.6 MW
+D. PHASE 1d TEST           rows=5,739  2025-05-01 00:00:00 -> 2025-06-30 23:45:00  max_demand=8,392.6 MW
+
+   -> Phase 1d uses ONLY shift() lags (24h, 7d). It uses NO rolling windows. Remember that.
+
+STEP 2 -- TRACING THE PHASE 2 EXPERIMENT PIPELINE AS ORIGINALLY WRITTEN
+------------------------------------------------------------------------------------------------
+Stage                                      Rows   Usable     Lost    MaxDem  Start               End                 
+------------------------------------------------------------------------------------------------
+1. raw (deduped, indexed)               293,184  285,252            8,631.5  2023-04-01 00:00:00 2026-01-12 23:55:00 
+2. resample 15min                        97,728   95,422  189,830   8,581.6  2023-04-01 00:00:00 2026-01-12 23:45:00 
+3. interpolate(limit=4)                  97,728   96,701   -1,279   8,581.6  2023-04-01 00:00:00 2026-01-12 23:45:00 
+4. weather join + dropna(temp)           97,725   96,698        3   8,581.6  2023-04-01 00:00:00 2026-01-12 23:00:00 
+5. + lag features (24h/48h/7d/14d)       93,011   92,321    4,377   8,581.6  2023-04-15 00:00:00 2026-01-12 23:00:00 
+6. + rolling features, then dropna()     55,614   55,614   36,707   8,232.1  2023-04-15 00:00:00 2026-01-07 16:15:00 
+7. broken TRAIN split                    34,086   34,086   21,528   8,232.1  2023-04-15 00:00:00 2025-04-24 23:30:00 
+8. broken TEST split                      4,972    4,972   29,114   7,700.3  2025-05-01 23:45:00 2025-06-30 23:45:00 
+------------------------------------------------------------------------------------------------
+
+STEP 2b -- PER-FEATURE NaN ATTRIBUTION AT THE FINAL dropna()
+------------------------------------------------------------------------------------------------
+Feature                     NaN rows  % of frame    Uniquely responsible
+------------------------------------------------------------------------------------------------
+load_MW                        1,027       1.05%                     435
+temp_C                             0       0.00%                       0
+lag_24h                        1,123       1.15%                       0
+lag_48h                        1,219       1.25%                       0
+lag_7d                         1,573       1.61%                       0
+lag_14d                        2,245       2.30%                   1,016
+roll24_mean                   16,356      16.74%                       0
+roll24_max                    16,356      16.74%                       0
+roll24_min                    16,356      16.74%                       0
+roll7d_mean                   40,656      41.60%                  22,646
+temp_at_issue                     96       0.10%                       0
+temp_prevday_max                 191       0.20%                       0
+temp_prevday_mean                191       0.20%                       0
+------------------------------------------------------------------------------------------------
+TOTAL rows dropped            42,111      43.09%
+
+STEP 2c -- SAME ATTRIBUTION, RESTRICTED TO THE TEST WINDOW (2025-05-01 .. 2025-07-01)
+------------------------------------------------------------------------------------------------
+Feature                   NaN rows in test  % of test window
+------------------------------------------------------------------------------------------------
+load_MW                                 39             0.67%
+lag_24h                                 39             0.67%
+lag_48h                                 39             0.67%
+lag_7d                                  39             0.67%
+lag_14d                                 40             0.68%
+roll24_mean                            134             2.29%
+roll24_max                             134             2.29%
+roll24_min                             134             2.29%
+roll7d_mean                            805            13.75%
+ANY (rows lost)                        884            15.10%
+
+STEP 3 -- TRACING THE VERIFIED PEAK THROUGH EVERY STAGE
+------------------------------------------------------------------------------------------------
+Verified peak timestamp: 2024-06-19 15:30:00   value 8,581.6 MW (expected ~8392.6 MW: MISMATCH)
+
+Stage                                   Present?           Value   Reason if missing
+------------------------------------------------------------------------------------------------
+raw (deduped)                           YES              8,597.8   
+resampled 15min                         YES              8,581.6   
+after interpolate(limit=4)              YES              8,581.6   
+after weather join                      YES              8,581.6   
+phase 1d feature frame                  YES              8,581.6   
+phase 2 BROKEN feature frame            NO                         dropped at final dropna()
+
+Columns that were NaN on the peak row: ['roll7d_mean']
+  roll7d_mean: needs 672 consecutive values in 2024-06-11 15:30:00 .. 2024-06-18 15:30:00; that span contains 52 missing blocks -> window returns NaN
+
+STEP 5 -- WEATHER JOIN AUDIT
+------------------------------------------------------------------------------------------------
+demand index tz: None   weather index tz: None   (both naive local = aligned)
+demand span : 2023-04-01 00:00:00 -> 2026-01-12 23:45:00
+weather span: 2023-04-01 00:00:00 -> 2026-01-12 23:00:00 (hourly, 24,432 readings)
+join method used: .reindex() on the demand index = LEFT-preserving, then dropna(subset=['temp_C'])
+rows before weather join: 97,728   after: 97,725   lost: 3
+lost timestamps span: 2026-01-12 23:15:00 -> 2026-01-12 23:45:00 (these are the 15-min blocks after the final hourly weather reading, so nothing to interpolate to)
+weather NaNs inside the test window: 0
+VERDICT: no inner join anywhere; weather is NOT the cause of the mass row loss.
+
+STEP 6/7 -- CORRECTED PIPELINE (smallest safe change) AND REBUILT SPLIT
+------------------------------------------------------------------------------------------------
+Change 1: build lag/rolling FEATURE INPUTS from a gap-filled copy of the series
+          (seasonal-naive: same block one week earlier, then linear).
+          The TARGET is never imputed and imputed blocks are never scored.
+Change 2: rolling windows get min_periods = 75% of window, so one missing block
+          no longer voids an entire 24h or 7d window.
+
+Dataset                           Rows     MaxDem   Range
+------------------------------------------------------------------------------------------------
+corrected full frame            95,354    8,581.6   2023-04-15 00:00:00 -> 2026-01-12 23:00:00
+corrected TRAIN                 70,914    8,581.6   2023-04-15 00:00:00 -> 2025-04-30 23:45:00
+corrected TEST                   5,817    8,392.6   2025-05-01 00:00:00 -> 2025-06-30 23:45:00
+phase 1d TRAIN (reference)      70,330    8,581.6
+phase 1d TEST  (reference)       5,739    8,392.6
+
+STEP 8 -- DATA INTEGRITY CHECKS
+------------------------------------------------------------------------------------------------
+  [PASS] test max demand == verified peak              8,392.6 MW vs expected 8392.6 MW
+  [FAIL] verified peak timestamp present in test       2024-06-19 15:30:00
+  [PASS] test continuity (>=99% of calendar blocks)    5,817 of 5,856 calendar blocks = 99.33%
+  [PASS] no duplicate timestamps                       index unique
+  [PASS] train/test boundary correct (no overlap)      train ends 2025-04-30 23:45:00, test starts 2025-05-01 00:00:00
+  [PASS] row loss vs phase 1d is small                 corrected train 70,914 vs phase1d 70,330 (+0.83%)
+  [PASS] peak-period blocks preserved                  582 kept of 582 present in processed data
+  [PASS] targets are never imputed values              every scored row has a real observed (or <=1h-interpolated) target
+
+STEP 8b -- LEAKAGE VERIFICATION (mechanical, not by inspection)
+------------------------------------------------------------------------------------------------
+probe target block: 2025-05-31 07:00:00   -> forecast issue time must be <= 2025-05-30 07:00:00
+  [PASS] lag_24h            sources 2025-05-30 07:00:00  (<= issue time)
+  [PASS] lag_48h            sources 2025-05-29 07:00:00  (<= issue time)
+  [PASS] lag_7d             sources 2025-05-24 07:00:00  (<= issue time)
+  [PASS] lag_14d            sources 2025-05-17 07:00:00  (<= issue time)
+  [PASS] roll24_*           newest input 2025-05-30 07:00:00  (<= issue time)
+  [PASS] roll7d_mean        newest input 2025-05-30 07:00:00  (<= issue time)
+  [PASS] temp_prevday_*     newest input 2025-05-30 07:00:00  (<= issue time)
+  [NOTE ] temp_target / cdh_target are TARGET-TIME weather -- TIER 2 only, and are an ASSUMPTION
+          (observed temperature standing in for a forecast we do not have). Excluded from TIER 1.
+  [PASS] all TIER-1 features sourced at or before issue time
+
+================================================================================================

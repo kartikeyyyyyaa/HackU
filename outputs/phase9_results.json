@@ -1,0 +1,83 @@
+{
+  "primary": {
+    "event_date": "2025-06-12",
+    "issue_time": "2025-06-11 23:00:00",
+    "forecast": {
+      "peak_mw": 7795.2,
+      "peak_time": "2025-06-12 23:00:00",
+      "p10_mw": 7150.8,
+      "p50_mw": 7795.2,
+      "p90_mw": 8417.6
+    },
+    "actual": {
+      "peak_mw": 8392.6,
+      "peak_time": "2025-06-12 23:00:00",
+      "peak_abs_err_mw": -597.4,
+      "peak_pct_err": -7.12,
+      "mape_full_pct": 9.84
+    },
+    "reliability": {
+      "state": "LOW",
+      "reasons": [
+        "critical 24h demand input reconstructed from the nearest available earlier day for 3 of 96 blocks in this 24h window (telemetry gap)",
+        "48h demand input reconstructed for 36 of 96 blocks",
+        "previous-24h demand telemetry only 59% complete at worst"
+      ]
+    },
+    "risk": {
+      "stress_score": 64.9,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "uncertainty": {
+      "inside_p90_at_actual_peak": true,
+      "p90_margin_at_actual_peak_mw": 25.0
+    },
+    "warning": {
+      "lead_time_hours": 24.0
+    }
+  },
+  "secondary_failure_mode": {
+    "event_date": "2025-06-11",
+    "issue_time": "2025-06-10 22:45:00",
+    "forecast": {
+      "peak_mw": 7371.4,
+      "peak_time": "2025-06-11 15:30:00",
+      "p10_mw": 6495.9,
+      "p50_mw": 7371.4,
+      "p90_mw": 8230.7
+    },
+    "actual": {
+      "peak_mw": 8180.8,
+      "peak_time": "2025-06-11 22:45:00",
+      "peak_abs_err_mw": -809.4,
+      "peak_pct_err": -9.89,
+      "mape_full_pct": 4.76
+    },
+    "reliability": {
+      "state": "LOW",
+      "reasons": [
+        "critical 24h demand input reconstructed from the nearest available earlier day for 35 of 92 blocks in this 24h window (telemetry gap)",
+        "previous-24h demand telemetry only 64% complete at worst"
+      ]
+    },
+    "risk": {
+      "stress_score": 61.7,
+      "stress_level": "WATCH",
+      "peak_risk": "MODERATE",
+      "peak_risk_reasons": [
+        "forecast reliability is LOW, so the upper bound is less dependable"
+      ]
+    },
+    "uncertainty": {
+      "inside_p90_at_actual_peak": false,
+      "p90_margin_at_actual_peak_mw": -246.8
+    },
+    "warning": {
+      "lead_time_hours": 24.0
+    }
+  }
+}

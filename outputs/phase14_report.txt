@@ -1,0 +1,571 @@
+PHASE 14 -- FINAL QA + DEMO PREPARATION
+============================================================================================
+PS-1: AI-based Electricity Demand Prediction System (Delhi)
+Scope: final QA of the locked Phase 7-13 system + demo preparation only. No new model, no new
+features, no architecture changes were made. All numbers in this report were read directly from
+a live run of phase13_backend.py / phase13_dashboard_app.py during this phase -- none are
+retyped from memory or from the brief's own example figures without re-verification (see
+Section 7 for one example figure that did NOT verify and was corrected).
+
+Two small, presentation-only edits were made to phase13_dashboard_app.py during this phase (both
+covered by Part L's "fix only clarity/presentation issues" permission; neither touches
+forecasting, scoring, or advisory logic):
+  1. Fixed a real dashboard bug: the Proof Mode "reveal actual outcome" toggle used a
+     dynamically-built widget key (key=f"pf_reveal_{day}_{choice}") that crashed under certain
+     day/event-switch sequences (KeyError inside Streamlit's widget bookkeeping). Replaced with a
+     single stable key plus explicit session-state reset logic. Re-tested extensively -- 0
+     exceptions across every switch sequence tried.
+  2. Relabeled the two REPORTED reliability badges ("Reliability (this calendar day)" in
+     Overview, "Reliability (this 24h window)" in Proof Mode) and added a short caption in both
+     places explaining that they intentionally answer different questions and can legitimately
+     show different HIGH/MEDIUM/LOW badges for the same date. This is a labeling fix for a
+     disclosed, by-design scope difference documented in phase13_consistency_fix_report.txt
+     Section 8 -- the underlying logic was NOT changed (also corrected a citation in that same
+     caption that pointed at the wrong section number, Section 5 instead of Section 8).
+  3. Added a one-line clarification to the app's top banner that all MW figures are
+     15-minute-average demand, not instantaneous readings (Part L finding, see Section 11).
+  4. Added a minimal .streamlit/config.toml (gatherUsageStats=false, showErrorDetails=false,
+     headless=true) so the app makes literally zero outbound network calls at startup, including
+     Streamlit's own default anonymous telemetry ping -- belt-and-suspenders for a judging room
+     with restricted wifi (see Section 3).
+
+
+============================================================================================
+1. QA RESULTS (PASS/FAIL TABLE)
+============================================================================================
+All tests run via streamlit.testing.v1.AppTest against the live backend (real data, real model,
+0 mocking) plus a live `streamlit run` smoke test. Full sweeps re-run after every fix.
+
+PART A -- OVERVIEW TAB
+  Default load (2025-06-12 pre-selected)                                          PASS
+  Date switching across full test period (2025-05-01 .. 2025-06-30)               PASS
+  Forecast chart renders (actual vs P50 vs P10-P90 band)                          PASS
+  P50 / P90 displayed with units and % of assumed capacity                        PASS
+  Reliability badge + reasons displayed, now labeled "this calendar day"          PASS
+  Grid Stress Score + level displayed                                             PASS
+  Peak risk + reasons + main driver displayed                                     PASS
+  DISCOM modeled-estimate table (4 buckets) displayed                             PASS
+  Advisory panel (deterministic rule engine) displayed                            PASS
+
+PART A -- WHAT-IF TAB
+  Default state (0.0 degC, solar off) matches BASE exactly                        PASS
+  Min temp delta (-8 degC, hard floor)                                            PASS
+  Max temp delta (+8 degC, hard ceiling)                                          PASS
+  +-2 degC, +-5 degC                                                              PASS
+  Negative temp deltas                                                            PASS
+  Solar on/off toggle                                                             PASS
+  Solar at 0 MW, mid-range, and max (4,000 MW) capacity                           PASS
+  After-sunset behavior: SCENARIO net P50 == gross P50 after SUNSET_H (no solar   PASS
+    effect possible after dark -- checked numerically, not just visually)
+  Midday duck-curve effect: gross vs net P50 diverge most near solar noon         PASS
+  No impossible outputs found (no negative MW, no P10>P50>P90 inversion, no       PASS
+    solar effect outside daylight hours) across the full slider sweep
+
+PART A -- PROOF MODE TAB
+  PRIMARY event (2025-06-12, season peak) loads and replays correctly            PASS
+  SECONDARY / FAILURE MODE event (2025-06-11) loads and replays correctly         PASS
+  "Choose any other test day..." path works for arbitrary test days               PASS
+  Reveal toggle: hidden by default, reveals actual outcome on demand              PASS
+  Reveal toggle resets to hidden on every event/day switch (verified desired      PASS
+    behavior, not just a side effect)
+  Issue-time (T) info strictly separated from actual-outcome info until reveal    PASS
+  No hindsight leakage: forecast values are identical whether or not reveal is    PASS
+    toggled on (verified programmatically -- reveal only changes what is
+    DISPLAYED, never what was computed)
+  [BUG FOUND + FIXED] Dynamic widget key crash on day/event switching             FIXED, now PASS
+
+============================================================================================
+2. CROSS-VIEW CONSISTENCY CONFIRMATION
+============================================================================================
+Compared day_state() [Overview] vs replay()/run_scenario() [Proof Mode/What-If] across all 35
+"same forecast state" days in the test period (days where all three paths independently select
+the same predicted-peak block for that calendar day):
+
+  P50 at peak block            0 / 35 mismatches   PASS
+  P90 at peak block             0 / 35 mismatches   PASS
+  P10 at peak block             0 / 35 mismatches   PASS   (newly checked this phase --
+                                                              see note below)
+  Peak time                     0 / 35 mismatches   PASS
+  Grid Stress Score             0 / 35 mismatches   PASS   (Phase 13 consistency fix)
+  Stress level                  0 / 35 mismatches   PASS
+  Peak risk                     0 / 35 mismatches   PASS
+
+  REPORTED reliability field    2 / 35 mismatches   EXPLAINED, not unexplained (see below)
+
+P10 note: day_state() does not surface a discrete "P10 at peak" number in its returned state
+(only the What-If/Proof Mode paths do, as "p10_at_pred_peak" / the p10 chart band). It is,
+however, the exact same res_df["p10"] column read by every path -- there is only one P10 series
+in the whole system, never a separately computed one. Checked directly against res_df["p10"] at
+Overview's own selected peak timestamp for all 35 same-state days: 0 mismatches. This is a
+UI-surfacing gap, not a data inconsistency -- flagged in Section 11, not fixed there per Part L's
+"clarity only" instruction, since adding a new metric to Overview would be a UI addition beyond
+this phase's remit.
+
+Reliability mismatch (2/35, EXPLAINED): 2025-06-12 shows MEDIUM (Overview, calendar-day scope)
+vs LOW (Proof Mode, 24h-window scope); 2025-06-13 shows HIGH vs MEDIUM. This is the disclosed,
+intentional scope difference from the Phase 13 consistency fix (that fix unified only the STRESS
+SCORE's internal reliability component, not the separately-reported reliability badge/field --
+see phase13_consistency_fix_report.txt Section 2, "IMPORTANT SCOPE NOTE"). Because this affects
+the exact flagship demo day, this phase added the presentation-layer clarification in Section 0
+above rather than changing the locked scoping logic. Verdict: EXPLAINED discrepancy, not a bug,
+and not silently left unlabeled.
+
+No unexplained discrepancy exists anywhere in the cross-view comparison.
+
+============================================================================================
+3. DEMO MODE CONFIRMATION
+============================================================================================
+  No network calls anywhere in phase13_dashboard_app.py or phase13_backend.py       CONFIRMED
+    (grep for requests/urllib/http(s)://socket/urlopen/api_key across both files:
+    zero matches)
+  App loads and is fully interactive with the OS socket layer hard-blocked           CONFIRMED
+    (socket.socket.connect() monkeypatched to raise on any call, AFTER Streamlit's
+    own import-time machinery had already loaded -- app load, every Overview date,
+    full What-If slider sweep including solar, and full Proof Mode event/reveal
+    sweep all ran with 0 exceptions under this condition)
+  Model fitted exactly once per server process                                      CONFIRMED
+    (initial build_backend(): ~4.4-4.6s; 60 subsequent mixed day_state/replay/
+    run_scenario calls on the SAME built object: 0.43s total, ~7ms/call -- no
+    refitting hidden inside any interaction path)
+  Live server smoke test (streamlit run --server.headless, curl against / and         CONFIRMED
+    /_stcore/health): both return HTTP 200, server log clean
+  No traceback ever shown to a judge on any failure path                             CONFIRMED
+    (main() wraps each of the three tabs' render calls in its own try/except;
+    an unexpected exception shows a plain st.error() with the real traceback
+    tucked behind a collapsed "Technical details" expander, never inline)
+  Streamlit's own default anonymous usage-stats network ping                          FOUND + FIXED
+    (non-blocking, does not affect app function, but is a real outbound network
+    attempt at startup that a restricted-wifi judging room could stall on;
+    disabled via .streamlit/config.toml this phase)
+
+Demo mode verdict: this app already uses only locally-saved real data (three CSVs) and a
+model refit once in-process at startup -- there is no separate "live path" to fall back from and
+no live path was ever built. Section 0 lists the one small hardening applied. All PASS.
+
+============================================================================================
+4. RECOMMENDED DEMO SCENARIO (exact scenario and values)
+============================================================================================
+Anchor: 2025-06-12 (the known season peak day, already wired as Proof Mode's PRIMARY event and
+Overview's default-selected day). All values below are read live from the backend during this
+phase, not from any earlier report.
+
+  OVERVIEW (2025-06-12):
+    Peak (P50):        7,795.2 MW at 23:00
+    P90 (upper bound):  8,417.6 MW (94% of the 9,000 MW illustrative capacity)
+    Reliability (this calendar day):  MEDIUM -- "48h demand input was reconstructed
+      (telemetry gap on the preceding day)"
+    Grid Stress Score:  62.4 (WATCH)
+    Peak risk:          MODERATE -- "P90 reaches 94% of assumed capacity (>=88% MODERATE
+      threshold, below the 95% HIGH threshold)"
+    Advisories fired (3): MONITOR (moderate peak risk); DATA QUALITY WARNING -- lighter
+      (secondary input reconstructed); PREPARE (P50 is a comfortable 87% of capacity, but P90
+      reaches 94% -- the central forecast alone could understate the event)
+
+  LOCALIZATION (same day):
+    BRPL:   3,467.7 MW P50 (44.5% of Delhi-wide demand) -- relative stress 86%/93% (P50/P90
+      vs its own 2025 reference peak)
+    BYPL:   1,695.4 MW P50 (21.8% share) -- relative stress 89%/96% <- HIGHEST relative stress
+      despite being the SMALLEST of the three individually modeled DISCOMs
+    TPDDL:  2,207.6 MW P50 (28.3% share) -- relative stress 86%/93%
+    NDMC+MES (residual): 424.4 MW P50 (5.4% share) -- no individual reference, shown as n/a
+    Illustrative point: BRPL carries the largest absolute MW contribution, but BYPL is under
+      more RELATIVE stress against its own history -- a genuine, real example of why the
+      dashboard separates contribution from relative stress rather than showing one number.
+
+  WHAT-IF (+5 degC scenario, same issue time, explicitly labeled SCENARIO not history):
+    BASE:      7,795.2 MW peak, stress 62.4 (WATCH), risk MODERATE
+    +5 degC:   8,050.7 MW peak (+255.5 MW), stress 76.8 (HIGH), risk HIGH (was MODERATE),
+               P90 reaches 97% of capacity
+    This is the only state in the entire test period (real or scenario) that reaches HIGH risk
+    -- no real calendar day in 1 May - 30 June 2025 reached HIGH or CRITICAL peak risk (real-day
+    distribution: 54 days LOW, 7 days MODERATE, 0 HIGH/CRITICAL). Must be presented ONLY as a
+    "what if it were 5 degrees hotter" scenario, never as something that happened.
+
+  PROOF MODE (PRIMARY event, replay issued 2025-06-11 23:00 for the 2025-06-12 peak):
+    Predicted (P50):  7,795.2 MW at 23:00   |   P10/P90 band: 7,150.8 / 8,417.6 MW
+    Reliability (this 24h window): LOW -- "critical 24h demand input reconstructed ... for 3 of
+      96 blocks", "48h demand input reconstructed for 36 of 96 blocks", "previous-24h demand
+      telemetry only 59% complete at worst"
+    Actual (on reveal): 8,392.6 MW at 23:00 -- this IS the documented known season peak, and the
+      predicted and actual peak land at the exact same 15-min block
+    Error: -597.4 MW (-7.1%), an honest underforecast
+    Actual fell INSIDE the P10-P90 band, but only just -- margin to P90 was +25.0 MW (a genuine
+      near-miss, disclosed as such, not hidden or rounded away)
+    This replay's own full-window MAPE: 9.84% (this specific hard event; see Section 7 for the
+      correct FULL-TEST-PERIOD MAPE, which is a different, lower number by construction)
+
+============================================================================================
+5. 60-SECOND DEMO SCRIPT
+============================================================================================
+(PROBLEM -> FORECAST -> CONFIDENCE -> RISK -> WHAT-IF -> PROOF. Every number below is one of the
+real, verified values from Section 4 -- nothing here is invented.)
+
+"Delhi's summer peak electricity demand is hard to plan for, and a wrong call is expensive
+either way -- under-prepare and you risk load-shedding, over-prepare and you waste reserve
+capacity. This is an AI-based decision-support system built for that problem, using two years of
+15-minute Delhi load data and local weather.
+
+[OVERVIEW] Here's tomorrow's forecast for June 12th, the actual season peak day. The model
+predicts 7,795 megawatts at 11 PM, with a P90 upper bound of 8,418 megawatts -- 94% of our
+9,000-megawatt illustrative capacity line.
+
+[CONFIDENCE] But we don't just give a number -- we tell you how much to trust it. This forecast
+is flagged MEDIUM reliability, because some of the demand data feeding it had to be reconstructed
+due to a telemetry gap the day before. That's not hidden -- it's shown right on the badge.
+
+[RISK] Combining the forecast, the uncertainty, and that reliability flag, the system computes a
+single Grid Stress Score -- 62.4, in the WATCH band, MODERATE peak risk. And it doesn't stop at
+the city level -- it breaks that risk down by DISCOM. BRPL carries the biggest slice of demand,
+44 percent, but BYPL, which is smaller, is actually running hotter against its own history --
+that's the kind of thing a single city-wide number would hide.
+
+[WHAT-IF] Now the scenario tool: what if it's five degrees hotter than forecast? The peak jumps
+to 8,051 megawatts, and the Grid Stress Score jumps from WATCH to HIGH -- crossing into our
+highest real-risk state anywhere in this system. I want to be clear this is a hypothetical
+scenario, not something that happened.
+
+[PROOF] Last -- does this forecast actually hold up? This is Proof Mode: the real forecast we
+would have issued 24 hours before June 12th's actual peak, replayed honestly, with nothing
+recomputed after the fact. We predicted 7,795 megawatts. [reveal] The real peak was 8,393
+megawatts -- a 597-megawatt miss, about 7 percent low, but it landed inside our uncertainty band,
+just barely. We show that honestly too, because a system that only shows you its wins isn't
+trustworthy."
+
+============================================================================================
+6. 3-MINUTE TECHNICAL BACKUP EXPLANATION
+============================================================================================
+"The pipeline starts with two years of 15-minute Delhi load data plus hourly weather, resampled
+to a common 15-minute grid.
+
+DATA & PREPROCESSING: Two real data problems had to be solved before any modeling. First, there
+are genuine telemetry gaps in the load series -- some blocks and even whole stretches are
+missing. Our first imputation approach (simple same-time-yesterday filling) produced a
+5,817-block full-test-period MAPE of about 6.01%; switching to nearest-observed-day imputation
+-- filling a gap from the closest day that actually has real data for that time-of-day, rather
+than a fixed lag -- improved that to 5.94%, and that is the version that's locked into the
+system today. Second, every imputed block is flagged, and those flags feed directly into the
+reliability score you saw in the demo -- a forecast built on more reconstructed data is
+explicitly marked less trustworthy, not silently treated the same as one built on clean
+telemetry.
+
+GENUINE 24-HOUR-AHEAD FORECASTING: This is the part we were most careful about. Every feature
+used to predict a given 15-minute block -- lagged demand, weather, calendar features -- is
+constructed using only information available strictly 24 hours or more before that block, via
+explicit time-shifted (shift-by-H) feature construction at the point the whole feature matrix is
+built. That's enforced structurally, once, for every downstream use of the model -- Overview,
+What-If, and Proof Mode all read from the same leakage-safe feature set; nothing downstream can
+accidentally see the future. Proof Mode additionally carries its own formal runtime assertion
+that raises an error and refuses to serve a replay if the window it's about to show could contain
+any information from after the issue time.
+
+WEATHER FORECAST & BIAS CORRECTION: We don't get to use the actual observed temperature for the
+target time -- that would be leakage, since we don't have tomorrow's real weather today. Instead
+we use a day-ahead weather FORECAST, and because forecast weather is systematically biased
+(too hot, too cold, depending on time of day), we apply an adaptive bias correction: for each
+15-minute time-of-day slot, we look at the last 30 days of forecast-vs-observed error --
+computed using only data at least 24 hours old, same leakage constraint -- and use that rolling
+average error to correct today's forecast temperature before it goes into the model.
+
+MODEL: We use ordinary least squares (OLS) on standardized features, not a more complex model
+like XGBoost. That wasn't the default choice -- we ran a head-to-head experiment (see
+phase2_final_report.txt): OLS beat XGBoost on this dataset on every metric that matters here --
+overall MAPE (6.33% vs 6.57% at that stage of the pipeline), peak-day MAPE (7.47% vs 8.43%), and
+daily-peak-timestamp MAPE (5.76% vs 6.21%). Given that XGBoost was not more accurate, we kept
+OLS for its transparency, its ~4.5-second fit time, and the fact that every prediction can be
+traced back to an explicit linear combination of named features -- important when you're also
+trying to audit the pipeline for leakage, which we found and fixed a version of during Phase 13
+(a growth-term reference-window inconsistency between two application paths, now unified into
+one canonical scoring function).
+
+UNCERTAINTY & RELIABILITY: Alongside the point forecast (P50), we fit P10/P90 quantile
+regression via IRLS on out-of-fold residuals, with reliability-aware widening -- a
+lower-reliability forecast gets a wider band, not a falsely confident one. Reliability itself is
+HIGH/MEDIUM/LOW based on how much of the input data for that forecast had to be reconstructed.
+
+RISK & LOCALIZATION: A single Grid Stress Score combines utilization (P50 and P90 against a
+capacity assumption), day-over-day growth, heat, and reliability into one number and a
+NORMAL/WATCH/HIGH/CRITICAL level; a separate rule maps utilization and reliability to a
+LOW/MODERATE/HIGH/CRITICAL peak-risk label. DISCOM-level numbers are MODELED ESTIMATES --
+Delhi-wide demand split by disclosed allocation ratios, never live feeder telemetry, and clearly
+labeled as such everywhere they appear.
+
+SCENARIO ENGINE & RECOMMENDATIONS: The What-If tab genuinely recomputes the forecast through the
+same fitted model for a perturbed temperature input -- it's not a lookup table. Solar is kept
+separate: a disclosed, non-fitted half-sine daylight assumption subtracted from the gross
+forecast, so it can never affect an after-dark peak. A deterministic rule engine (no LLM) then
+turns risk, reliability, and DISCOM-level signals into plain-language advisories."
+
+============================================================================================
+7. APPROVED CLAIMS LIST (measured only)
+============================================================================================
+IMPORTANT CORRECTION TO THE BRIEF: the brief's example claim was "6.01% MAPE for the approved
+bias-corrected configuration on held-out 1 May-30 June 2025." Per this project's standing
+verify-don't-assume discipline, this was re-checked against a fresh, live run of the CURRENT
+locked backend rather than accepted as given. Result: 6.01% (6.0149%) is the MAPE of an earlier,
+SUPERSEDED imputation configuration (simple same-time-yesterday filling), traceable to
+phase6_results.json ("A. current imputation"). The configuration actually locked into the system
+today -- nearest-observed-day imputation, explicitly named in the Phase 14 LOCKED SYSTEM list --
+measures 5.94% (5.9389%), confirmed by two independent computations (phase6_results.json
+"B. nearest-day imputation" = 5.938932...; and a fresh direct computation on the live
+res_df this phase = 5.9389...%, matching to 4 decimal places). Do not use 6.01% going forward --
+use 5.94%.
+
+Claims verified true and safe to make, with exact figures:
+  - 5.94% MAPE (mean absolute percentage error) for the approved, currently-locked, bias-
+    corrected, nearest-day-imputation configuration, measured on the full held-out test period
+    1 May - 30 June 2025 (5,817 fifteen-minute blocks). This is a 15-MINUTE-AVERAGE-DEMAND
+    metric, not an instantaneous-peak metric.
+  - Genuine 24-hour-ahead forecasting methodology, structurally enforced via time-shifted
+    feature construction at the point the feature matrix is built (not just per-function
+    checks), plus a formal runtime leakage assertion in the historical-replay path.
+  - No future demand leakage: verified structurally (every lag feature uses shift(H) or greater)
+    and via a formal runtime assertion in replay() that raises an error rather than serve a
+    leaking window.
+  - Adaptive, rolling 30-day, time-of-day-specific weather forecast bias correction, computed
+    using only pre-issue-time data.
+  - P10/P50/P90 uncertainty quantification via IRLS quantile regression on out-of-fold
+    residuals, with HIGH/MEDIUM/LOW reliability-aware interval widening.
+  - Historical Proof Mode: genuine, honestly-replayed forecast-vs-actual comparisons for real
+    historical events, including the actual known season peak (8,392.6 MW, 12 June 2025, 23:00),
+    with disclosed misses (the primary replay under-forecasts that peak by 597.4 MW / 7.1%, and
+    still falls inside the P10-P90 band by only 25 MW).
+  - Reliability-aware decision support: a deterministic (non-LLM) advisory rule engine that
+    responds to peak risk, reliability, and DISCOM-level relative stress.
+  - The dashboard makes zero live network calls; all data and model artifacts are local.
+  - The forecast model is fit exactly once per server process and never retrained on a UI
+    interaction (confirmed by direct timing: ~4.5s to fit, ~7ms per subsequent interaction).
+
+============================================================================================
+8. CLAIMS WE MUST NOT MAKE
+============================================================================================
+  - "100% accurate" / "solves peak prediction" / "predicts all extreme peaks" -- false; the
+    system's own Proof Mode shows a real 597 MW miss on the flagship demo day.
+  - "6.01% MAPE for the approved configuration" -- this figure belongs to a SUPERSEDED
+    configuration, not the current locked one (see Section 7). The correct figure is 5.94%.
+  - "5.47% operational MAPE" / "1.83% MAPE" -- neither figure was reproduced anywhere in this
+    project's backend, results files, or reports found during this phase; do not use them.
+  - "Live feeder prediction" / "real-time feeder telemetry" -- the system uses batch historical
+    and day-ahead-forecast data only; DISCOM figures are modeled estimates from Delhi-wide
+    totals via disclosed allocation ratios, never live feeder-level telemetry.
+  - "Weather forecasting solved the peak problem" -- weather bias correction measurably helps
+    (documented across earlier phases) but the system still has a genuine, disclosed miss on the
+    hardest real event in the test period.
+  - "The stress score is operationally validated" -- it is internally consistent (0 discrepancy
+    across all cross-view same-state checks) and grounded in the same forecast/reliability
+    pipeline, but it has not been validated against real DISCOM/SLDC operational outcomes or
+    real-world grid operator decisions -- say "internally consistent and disclosed," not
+    "operationally validated."
+  - Any claim that conflates a 15-minute-AVERAGE MW figure with an INSTANTANEOUS peak reading --
+    always specify which.
+  - Any claim that the 9,000 MW capacity figure is an official SLDC/DISCOM-declared limit -- it
+    is explicitly illustrative.
+  - Any claim that the historical June event "triggered an advisory" of a specific severity --
+    the real 2025-06-12 Overview state produced MODERATE-risk advisories (MONITOR, DATA QUALITY
+    WARNING, PREPARE); it did NOT reach HIGH/CRITICAL. Only the +5 degC What-If SCENARIO reaches
+    HIGH -- and must always be presented as a scenario, never as something that happened.
+
+============================================================================================
+9. JUDGE Q&A (18 likely questions)
+============================================================================================
+1) Why OLS instead of XGBoost?
+   Simple: we tested both head-to-head and OLS was at least as accurate while being far more
+   transparent and auditable.
+   Technical: Phase 2's controlled experiment (phase2_final_report.txt) showed OLS beating
+   XGBoost on overall MAPE (6.33% vs 6.57%), peak-day MAPE (7.47% vs 8.43%), and daily-peak-
+   timestamp MAPE (5.76% vs 6.21%) at that stage of the pipeline. With no accuracy advantage for
+   the more complex model, OLS was kept for its transparency, ~4.5s fit time, and ease of
+   auditing for leakage.
+
+2) How do you prevent data leakage?
+   Simple: the model is only ever allowed to see information from 24+ hours before the moment
+   it's predicting.
+   Technical: every lag/rolling feature is built with an explicit shift(H) or greater at the
+   single point the whole feature matrix is constructed, so leakage-safety is structural, not a
+   per-function check. Proof Mode additionally carries a runtime assertion that raises an error
+   rather than serve a replay window that could contain post-issue-time information.
+
+3) Where does "tomorrow's weather" come from?
+   Simple: a day-ahead weather forecast file, not the real observed weather for that day.
+   Technical: delhi_weather_forecast_day1.csv, resampled to 15-minute resolution and used as
+   temp_fcst_C; the model never sees temp_C (observed) for the target block.
+
+4) How is the weather forecast bias-corrected?
+   Simple: we track how wrong the weather forecast has recently been, at each time of day, and
+   nudge today's forecast by that same recent error.
+   Technical: for each 15-minute time-of-day slot, a 30-day rolling mean of (observed - forecast)
+   error, itself lagged by 24h so it uses only past data, is added to the raw forecast
+   temperature to produce temp_corr, the value actually fed to the model.
+
+5) How is missing load data handled?
+   Simple: gaps are filled from the closest earlier day that actually has real data for that
+   time of day, not a fixed "same time yesterday" rule -- and every filled block is flagged.
+   Technical: nearest-observed-day imputation, replacing an earlier same-time-yesterday
+   approach; the improvement was measured at 6.01%->5.94% full-test-period MAPE. Every imputed
+   block sets lag24_imputed/lag48_imputed flags that directly drive the reliability score.
+
+6) Why should I trust this forecast?
+   Simple: because it tells you when NOT to fully trust it -- via the reliability badge -- rather
+   than presenting every forecast with false confidence.
+   Technical: reliability is HIGH/MEDIUM/LOW based on how much of a forecast's input data was
+   reconstructed, and directly widens the P10/P90 band and shifts the peak-risk/advisory logic
+   when it's degraded.
+
+7) What does P90 actually mean here?
+   Simple: a value we expect the real demand to stay below about 90% of the time.
+   Technical: the upper quantile from IRLS quantile regression on out-of-fold residuals, with
+   reliability-aware multiplicative widening; empirically, actual demand fell at or below P90 in
+   86.6% of the 5,817 test blocks (close to, slightly under, the nominal 90% target).
+
+8) Why does the stress score use both P50 and P90, not just P50?
+   Simple: P50 alone can look comfortable while the uncertain upper end is not -- we want to
+   catch that.
+   Technical: the score explicitly checks for exactly that pattern (util50 < 0.88 <= util90) and
+   fires a dedicated PREPARE advisory when it occurs -- which is in fact the real state on the
+   demo day, 2025-06-12 (P50 87% of capacity, P90 94%).
+
+9) Where do the DISCOM numbers come from?
+   Simple: Delhi-wide demand split into shares for BRPL, BYPL, TPDDL, and a residual bucket,
+   using disclosed allocation ratios -- not separate per-utility forecasts.
+   Technical: discom_estimate() applies fixed, disclosed RATIO values to the Delhi-wide P50/P90;
+   this is why the dashboard labels these figures "MODELED ESTIMATE" everywhere they appear.
+
+10) Is the DISCOM data real?
+    No -- it is a modeled allocation of the real, measured Delhi-wide demand, not independently
+    measured or reported per-DISCOM data. This is disclosed on every screen that shows it.
+
+11) Why is there no feeder-level telemetry?
+    Because this project's real, measured input is city-wide 15-minute load data -- feeder-level
+    telemetry was never part of the available dataset, so the system is honest that DISCOM
+    numbers are modeled, not measured, rather than presenting an unsupported level of detail.
+
+12) How does the What-If simulator actually work?
+    Simple: the temperature slider genuinely re-runs the real forecast model with a shifted
+    temperature input; the solar slider is a separate, disclosed assumption subtracted
+    afterward.
+    Technical: apply_temp_delta() perturbs only the corrected-forecast temperature feature (and
+    features derived from it) and re-fires the same fitted OLS/quantile pipeline; solar_profile_
+    mw() is a non-fitted half-sine daylight-hours assumption, never blended into the model
+    itself.
+
+13) Is the solar output a genuine model prediction?
+    No -- it's explicitly disclosed, assumption-based scenario arithmetic (a half-sine daylight
+    curve), not fitted from any data in this project, and the dashboard labels it as such.
+
+14) Can this system control the grid?
+    No. It is a forecasting and decision-support dashboard only -- it has no control or write
+    access to any grid, DISCOM, or SLDC system; it only displays estimates and advisories.
+
+15) How did Proof Mode work for the demo event?
+    A forecast for 12 June 2025's actual peak was issued using only information available at
+    2025-06-11 23:00 (24 hours before), predicting 7,795.2 MW; the real outcome, 8,392.6 MW, was
+    revealed only afterward, separately, with nothing recomputed with hindsight.
+
+16) What happens when the model is wrong?
+    It's shown honestly, not hidden or silently corrected. The Proof Mode primary event is
+    itself an example: a real 597.4 MW / 7.1% underforecast that still fell inside, but very
+    close to the edge of, the P10-P90 band (25 MW margin) -- disclosed on-screen as a genuine
+    near-miss.
+
+17) What's the biggest limitation of this system?
+    The forecast quality is bounded by real, disclosed data-completeness gaps in the underlying
+    telemetry (some 15-minute blocks have to be reconstructed from a nearby day), and the system
+    has never been tested against a real HIGH/CRITICAL-risk day -- no such day occurred in the
+    test period, so that state has only been exercised via the labeled +5 degC What-If scenario.
+
+18) What would a real DISCOM deployment path look like?
+    Replacing the modeled DISCOM allocation with real per-feeder or per-DISCOM telemetry where
+    available, validating the Grid Stress Score and advisory thresholds against real operator
+    decisions and outcomes over a full season (including at least one real HIGH/CRITICAL day),
+    and formal review by DISCOM/SLDC domain experts before any operational use -- none of which
+    has happened yet; this system is a decision-support prototype, not an operationally-
+    validated deployment.
+
+============================================================================================
+10. FAILURE PLAN (top 5, Failure -> Detection -> Fallback)
+============================================================================================
+1) FAILURE: Judging-room internet is unavailable or unstable.
+   DETECTION: Not applicable to this app's own function -- grep-verified and load-tested with
+   the OS network layer hard-blocked: 0 exceptions across every tab and interaction. The only
+   real (non-blocking) outbound attempt was Streamlit's own anonymous usage-stats ping, now
+   disabled via .streamlit/config.toml.
+   FALLBACK: None needed for the app itself. Launch it before walking into the room if possible,
+   simply as good practice, not because it needs the network to start.
+
+2) FAILURE: The three source CSVs are missing, moved, or corrupted at the expected data path.
+   DETECTION: build_backend() explicitly checks for all three required files and raises a
+   BackendError naming exactly which are missing; safe_backend() catches this before the UI
+   renders.
+   FALLBACK: st.error() shows the exact missing-file message and the app stops cleanly -- no
+   traceback. Presenter fallback: keep a second copy of the data folder (USB drive / second
+   laptop) and confirm the data path before the demo starts.
+
+3) FAILURE: A future code change (or an unanticipated interaction sequence) reintroduces a
+   dashboard-state / widget error, of the same class as the reveal-toggle bug found this phase.
+   DETECTION: main() wraps each of the three tabs' render calls in its own try/except; any
+   uncaught exception is caught per-tab.
+   FALLBACK: The affected tab shows a plain "Something went wrong" message with the real
+   traceback hidden behind a collapsed "Technical details" expander -- never inline, never
+   crashing the whole app. Presenter fallback: switch to a different tab, or reselect the same
+   day/event to force a clean rerun; worst case, refresh the browser tab (the model is still
+   cached in-process, so this recovers in under a second).
+
+4) FAILURE: A slider is pushed to an edge case (extreme temperature, solar at the exact
+   sunrise/sunset boundary) and produces an unexpected combination.
+   DETECTION: apply_temp_delta() explicitly clips to the hard temperature bounds and reports how
+   many blocks were clipped via scn["notes"], shown as an inline st.warning(); solar_profile_mw()
+   is structurally zero outside daylight hours by construction, not by a runtime check that could
+   be bypassed.
+   FALLBACK: Any clipping or edge condition is shown to the presenter inline, not hidden; reset
+   the slider to 0 / disable solar to return to the known-good BASE state.
+
+5) FAILURE: The presenter is asked to demo a real HIGH/CRITICAL-risk day, but no such day exists
+   in the real test period.
+   DETECTION: This is a demo-content risk, not a code risk -- confirmed this phase that the real
+   peak_risk distribution across all 61 test days is 54 LOW / 7 MODERATE / 0 HIGH / 0 CRITICAL.
+   FALLBACK: Use the +5 degC What-If scenario on 2025-06-12 (Section 4), always clearly labeled
+   as a hypothetical scenario, never claimed as a historical event -- this is the only state
+   anywhere in the system, real or scenario, that reaches HIGH.
+
+============================================================================================
+11. FINAL UI ISSUES (only remaining real issues, after this phase's fixes)
+============================================================================================
+Fixed this phase (see Section 0 for detail): reveal-toggle crash; reliability-badge label/
+caption ambiguity between Overview and Proof Mode (plus a wrong section-number citation in that
+same caption); missing "15-minute-average, not instantaneous" disclosure; Streamlit's default
+telemetry ping.
+
+Remaining, NOT fixed (judged not to need a code change, or explicitly out of scope):
+  - Overview does not show a discrete "P10 at peak" metric the way Proof Mode does (it only
+    shows P10 as part of the continuous chart band). Confirmed this phase that the underlying
+    P10 value is identical everywhere it's used (0/35 mismatches on same-state days) -- this is
+    a minor presentational asymmetry between tabs, not a data issue, and adding a new metric to
+    Overview would be a UI addition beyond this phase's "clarity/presentation only, no new
+    elements" remit. Safe to leave as-is; worth a one-line mention if a judge asks (see Q&A 7).
+  - The peak-selection-window difference between Overview (calendar-day peak) and What-If/Proof
+    Mode (24h-issued-window peak) remains, by design, on 24 of 59 testable days -- already
+    disclosed in-app (Section 0, both relevant captions) and in
+    phase13_consistency_fix_report.txt Section 8. Explicitly out of scope for this phase (Phase
+    14's DO NOT list forbids stress-score/threshold/logic changes).
+
+No other clarity, labeling, unit, or terminology issues were found in this pass. Every MW/percent/
+degree value checked carries a unit; every DISCOM and capacity figure checked carries a MODELED
+ESTIMATE / ILLUSTRATIVE label; every scenario-vs-model-driven input is explicitly labeled as one
+or the other.
+
+============================================================================================
+12. FINAL READINESS
+============================================================================================
+READY FOR JUDGING
+
+All QA items in Parts A-D pass (one real bug found and fixed: the Proof Mode reveal-toggle
+widget-key crash). Cross-view consistency has zero unexplained discrepancies -- the two
+remaining differences (reliability-badge scope, peak-selection window) are both disclosed,
+by-design, and now clearly labeled in the UI. Demo mode is confirmed fully offline-capable, with
+one small hardening applied (disabling Streamlit's own default telemetry ping). The recommended
+demo scenario, 60-second script, and 3-minute technical explanation all use real, freshly-
+verified backend numbers. The approved-claims sheet corrects one real discrepancy found against
+the brief's own example figure (6.01% does not match the currently-locked configuration; the
+verified figure is 5.94%) rather than passing it through unverified. No new model, feature,
+threshold, or architecture change was made anywhere in this phase.
+
+PHASE 14 COMPLETE -- WAITING FOR APPROVAL.

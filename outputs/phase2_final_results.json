@@ -1,0 +1,110 @@
+{
+  "primary": {
+    "Naive: same time yesterday": {
+      "MAPE": 7.487775310852357,
+      "MAE": 402.3516270492445,
+      "RMSE": 565.5946357811014,
+      "PeakMAPE": 6.899749918945375,
+      "PeakMAE": 504.83241044465274,
+      "OffPeakMAPE": 7.553148907431127,
+      "MaxUnder_MW": 2830.6366666666663,
+      "KnownPeak_pred": 8177.803333333333,
+      "KnownPeak_err_MW": -214.79666666666708,
+      "KnownPeak_err_pct": -2.5593578469921963,
+      "DailyPeakMAPE": 6.240495918038131,
+      "n_under_5": 32,
+      "n_under_10": 6,
+      "n_days": 61
+    },
+    "Naive: same time last week": {
+      "MAPE": 12.971108389545138,
+      "MAE": 725.3110122629075,
+      "RMSE": 890.0330988689985,
+      "PeakMAPE": 19.219981649887877,
+      "PeakMAE": 1416.639200249922,
+      "OffPeakMAPE": 12.276391247707608,
+      "MaxUnder_MW": 3812.3533333333326,
+      "KnownPeak_pred": 5499.05,
+      "KnownPeak_err_MW": -2893.55,
+      "KnownPeak_err_pct": -34.47739675428353,
+      "DailyPeakMAPE": 15.610184970001422,
+      "n_under_5": 36,
+      "n_under_10": 29,
+      "n_days": 61
+    },
+    "A. OLS (Tier 1)": {
+      "MAPE": 6.329921927454651,
+      "MAE": 343.4011328874626,
+      "RMSE": 478.0722834593266,
+      "PeakMAPE": 7.473103095333341,
+      "PeakMAE": 549.8479808622078,
+      "OffPeakMAPE": 6.202829006785045,
+      "MaxUnder_MW": 2419.5398980142963,
+      "KnownPeak_pred": 7601.880652833133,
+      "KnownPeak_err_MW": -790.719347166867,
+      "KnownPeak_err_pct": -9.421625564984236,
+      "DailyPeakMAPE": 5.760405054859534,
+      "n_under_5": 30,
+      "n_under_10": 7,
+      "n_days": 61
+    },
+    "B. XGBoost (Tier 1)": {
+      "MAPE": 6.572995499109205,
+      "MAE": 357.9196127808432,
+      "RMSE": 479.10366358322216,
+      "PeakMAPE": 8.431224242370096,
+      "PeakMAE": 620.9260136002829,
+      "OffPeakMAPE": 6.3664073179099985,
+      "MaxUnder_MW": 2090.5595182291663,
+      "KnownPeak_pred": 7381.037109375,
+      "KnownPeak_err_MW": -1011.5628906250004,
+      "KnownPeak_err_pct": -12.05303351315445,
+      "DailyPeakMAPE": 6.2070194362377915,
+      "n_under_5": 34,
+      "n_under_10": 4,
+      "n_days": 61
+    }
+  },
+  "supplementary_assumption_only": {
+    "A. OLS (Tier 2, assumed perfect temp fcst)": {
+      "MAPE": 5.486512598600353,
+      "MAE": 300.43968234561,
+      "RMSE": 426.4569799292216,
+      "PeakMAPE": 6.616820435469677,
+      "PeakMAE": 487.765005089997,
+      "OffPeakMAPE": 5.360850867739237,
+      "MaxUnder_MW": 2340.4880567839746,
+      "KnownPeak_pred": 7617.236921134733,
+      "KnownPeak_err_MW": -775.3630788652672,
+      "KnownPeak_err_pct": -9.238651655807107,
+      "DailyPeakMAPE": 5.0681506915980945,
+      "n_under_5": 25,
+      "n_under_10": 4,
+      "n_days": 61
+    },
+    "B. XGBoost (Tier 2, assumed perfect temp fcst)": {
+      "MAPE": 5.984527884883202,
+      "MAE": 329.14255452554085,
+      "RMSE": 448.4267392206542,
+      "PeakMAPE": 7.799160146882224,
+      "PeakMAE": 575.4574269200137,
+      "OffPeakMAPE": 5.782786533119415,
+      "MaxUnder_MW": 2063.5297330729163,
+      "KnownPeak_pred": 7330.0869140625,
+      "KnownPeak_err_MW": -1062.5130859375004,
+      "KnownPeak_err_pct": -12.66011827011296,
+      "DailyPeakMAPE": 5.7212931073699345,
+      "n_under_5": 29,
+      "n_under_10": 4,
+      "n_days": 61
+    }
+  },
+  "train_rows": 70914,
+  "test_rows": 5817,
+  "test_range": [
+    "2025-05-01 00:00:00",
+    "2025-06-30 23:45:00"
+  ],
+  "test_max_MW": 8392.566666666668,
+  "peak_threshold_MW": 6786.778000000001
+}

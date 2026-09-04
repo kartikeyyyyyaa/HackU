@@ -1,0 +1,1436 @@
+[
+  {
+    "date": "2025-05-01",
+    "peak_time": "15:30",
+    "p10_mw": 5563.4,
+    "p50_mw": 5969.0,
+    "p90_mw": 6386.1,
+    "actual_peak_mw": 6045.7,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 5.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 36.1C",
+      "upper bound (P90) reaches 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 71% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-02",
+    "peak_time": "15:30",
+    "p10_mw": 5558.3,
+    "p50_mw": 5972.6,
+    "p90_mw": 6389.1,
+    "actual_peak_mw": 5811.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 6.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 36.4C",
+      "upper bound (P90) reaches 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 71% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-03",
+    "peak_time": "00:00",
+    "p10_mw": 5221.0,
+    "p50_mw": 5584.1,
+    "p90_mw": 6037.2,
+    "actual_peak_mw": 4688.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 0.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 67% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-04",
+    "peak_time": "00:00",
+    "p10_mw": 4226.3,
+    "p50_mw": 4626.2,
+    "p90_mw": 5018.5,
+    "actual_peak_mw": 4739.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 0.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 56% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-05",
+    "peak_time": "23:15",
+    "p10_mw": 4707.5,
+    "p50_mw": 5069.5,
+    "p90_mw": 5413.4,
+    "actual_peak_mw": 4832.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 10.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +9.6% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 60% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-06",
+    "peak_time": "15:15",
+    "p10_mw": 4709.5,
+    "p50_mw": 5017.6,
+    "p90_mw": 5362.2,
+    "actual_peak_mw": 5082.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 2.6,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 33.1C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 60% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-07",
+    "peak_time": "15:15",
+    "p10_mw": 5013.6,
+    "p50_mw": 5293.8,
+    "p90_mw": 5662.2,
+    "actual_peak_mw": 5363.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 9.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +5.5% versus the previous day",
+      "corrected temperature forecast at peak is 32.9C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 63% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-08",
+    "peak_time": "15:15",
+    "p10_mw": 5218.7,
+    "p50_mw": 5590.8,
+    "p90_mw": 5988.6,
+    "actual_peak_mw": 5458.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 11.9,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +5.6% versus the previous day",
+      "corrected temperature forecast at peak is 35.9C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 67% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-09",
+    "peak_time": "15:30",
+    "p10_mw": 5086.4,
+    "p50_mw": 5439.0,
+    "p90_mw": 5821.7,
+    "actual_peak_mw": 5733.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 3.6,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 34.3C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 65% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-10",
+    "peak_time": "15:30",
+    "p10_mw": 5073.5,
+    "p50_mw": 5401.3,
+    "p90_mw": 5846.3,
+    "actual_peak_mw": 5488.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 2.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 33.4C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 65% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-11",
+    "peak_time": "14:15",
+    "p10_mw": 5020.1,
+    "p50_mw": 5271.0,
+    "p90_mw": 5708.2,
+    "actual_peak_mw": 5192.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 5.2,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 36.2C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 63% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-12",
+    "peak_time": "23:30",
+    "p10_mw": 5181.2,
+    "p50_mw": 5547.2,
+    "p90_mw": 5922.6,
+    "actual_peak_mw": 5795.7,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 8.7,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +5.2% versus the previous day",
+      "corrected temperature forecast at peak is 32.6C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 66% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-13",
+    "peak_time": "23:15",
+    "p10_mw": 5512.3,
+    "p50_mw": 5918.7,
+    "p90_mw": 6319.3,
+    "actual_peak_mw": 6333.5,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 9.9,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +6.7% versus the previous day",
+      "corrected temperature forecast at peak is 31.7C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 70% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-14",
+    "peak_time": "15:15",
+    "p10_mw": 5970.7,
+    "p50_mw": 6424.3,
+    "p90_mw": 6872.6,
+    "actual_peak_mw": 6126.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 25.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +8.5% versus the previous day",
+      "corrected temperature forecast at peak is 40.3C",
+      "upper bound (P90) reaches 76% of assumed capacity",
+      "forecast peak is 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 76% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-15",
+    "peak_time": "15:15",
+    "p10_mw": 5943.9,
+    "p50_mw": 6398.3,
+    "p90_mw": 6845.5,
+    "actual_peak_mw": 6407.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 15.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 40.7C",
+      "upper bound (P90) reaches 76% of assumed capacity",
+      "forecast peak is 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 76% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-16",
+    "peak_time": "15:30",
+    "p10_mw": 5960.0,
+    "p50_mw": 6420.7,
+    "p90_mw": 6866.1,
+    "actual_peak_mw": 6823.5,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 16.1,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 40.8C",
+      "upper bound (P90) reaches 76% of assumed capacity",
+      "forecast peak is 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 76% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-17",
+    "peak_time": "15:15",
+    "p10_mw": 6150.3,
+    "p50_mw": 6596.4,
+    "p90_mw": 7130.7,
+    "actual_peak_mw": 6182.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 25.5,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 41.9C",
+      "upper bound (P90) reaches 79% of assumed capacity",
+      "forecast peak is 73% of assumed capacity",
+      "forecast peak is +2.7% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 79% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-18",
+    "peak_time": "14:45",
+    "p10_mw": 5696.5,
+    "p50_mw": 6126.3,
+    "p90_mw": 6620.9,
+    "actual_peak_mw": 6816.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 12.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 42.0C",
+      "upper bound (P90) reaches 74% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 74% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-19",
+    "peak_time": "23:15",
+    "p10_mw": 6362.4,
+    "p50_mw": 6820.7,
+    "p90_mw": 7288.4,
+    "actual_peak_mw": 7229.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 29.1,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "forecast peak is +11.3% versus the previous day",
+      "upper bound (P90) reaches 81% of assumed capacity",
+      "corrected temperature forecast at peak is 31.4C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 81% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-20",
+    "peak_time": "23:15",
+    "p10_mw": 6582.2,
+    "p50_mw": 7070.7,
+    "p90_mw": 7558.1,
+    "actual_peak_mw": 7507.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 31.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "upper bound (P90) reaches 84% of assumed capacity",
+      "forecast peak is +3.7% versus the previous day",
+      "corrected temperature forecast at peak is 32.7C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 84% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-21",
+    "peak_time": "23:00",
+    "p10_mw": 6784.3,
+    "p50_mw": 7285.3,
+    "p90_mw": 7787.5,
+    "actual_peak_mw": 7700.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 36.5,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 81% of assumed capacity",
+      "upper bound (P90) reaches 87% of assumed capacity",
+      "forecast peak is +3.0% versus the previous day",
+      "corrected temperature forecast at peak is 31.9C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 87% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-22",
+    "peak_time": "15:30",
+    "p10_mw": 6842.3,
+    "p50_mw": 7386.1,
+    "p90_mw": 7905.6,
+    "actual_peak_mw": 6254.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 43.2,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 82% of assumed capacity",
+      "upper bound (P90) reaches 88% of assumed capacity",
+      "corrected temperature forecast at peak is 38.9C",
+      "forecast peak is +1.4% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 88% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-23",
+    "peak_time": "15:30",
+    "p10_mw": 6204.7,
+    "p50_mw": 6670.1,
+    "p90_mw": 7126.9,
+    "actual_peak_mw": 6592.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 21.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 39.1C",
+      "forecast peak is 74% of assumed capacity",
+      "upper bound (P90) reaches 79% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 79% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-24",
+    "peak_time": "23:30",
+    "p10_mw": 5838.0,
+    "p50_mw": 6268.5,
+    "p90_mw": 6776.2,
+    "actual_peak_mw": 6804.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 3.7,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "upper bound (P90) reaches 75% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 75% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-25",
+    "peak_time": "23:30",
+    "p10_mw": 6140.5,
+    "p50_mw": 6599.9,
+    "p90_mw": 7137.1,
+    "actual_peak_mw": 6745.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 19.7,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +5.3% versus the previous day",
+      "upper bound (P90) reaches 79% of assumed capacity",
+      "forecast peak is 73% of assumed capacity",
+      "corrected temperature forecast at peak is 31.0C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 79% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-26",
+    "peak_time": "00:00",
+    "p10_mw": 6334.3,
+    "p50_mw": 6844.7,
+    "p90_mw": 7329.0,
+    "actual_peak_mw": 6059.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 24.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 81% of assumed capacity",
+      "forecast peak is +3.7% versus the previous day",
+      "corrected temperature forecast at peak is 30.8C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 81% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-27",
+    "peak_time": "23:15",
+    "p10_mw": 5894.1,
+    "p50_mw": 6329.2,
+    "p90_mw": 6773.3,
+    "actual_peak_mw": 6658.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 4.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "upper bound (P90) reaches 75% of assumed capacity",
+      "forecast peak is 70% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 75% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-28",
+    "peak_time": "23:00",
+    "p10_mw": 6177.0,
+    "p50_mw": 6661.8,
+    "p90_mw": 7130.0,
+    "actual_peak_mw": 6985.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 21.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 74% of assumed capacity",
+      "forecast peak is +5.3% versus the previous day",
+      "upper bound (P90) reaches 79% of assumed capacity",
+      "corrected temperature forecast at peak is 31.5C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 79% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-29",
+    "peak_time": "23:00",
+    "p10_mw": 6540.5,
+    "p50_mw": 7011.6,
+    "p90_mw": 7500.0,
+    "actual_peak_mw": 7302.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 32.1,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 78% of assumed capacity",
+      "upper bound (P90) reaches 83% of assumed capacity",
+      "forecast peak is +5.3% versus the previous day",
+      "corrected temperature forecast at peak is 32.6C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 83% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-30",
+    "peak_time": "15:15",
+    "p10_mw": 6553.3,
+    "p50_mw": 7067.5,
+    "p90_mw": 7568.9,
+    "actual_peak_mw": 6253.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 30.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "upper bound (P90) reaches 84% of assumed capacity",
+      "corrected temperature forecast at peak is 35.7C",
+      "forecast peak is +0.8% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 84% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-05-31",
+    "peak_time": "15:15",
+    "p10_mw": 5804.5,
+    "p50_mw": 6199.3,
+    "p90_mw": 6699.7,
+    "actual_peak_mw": 6311.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 10.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 38.4C",
+      "upper bound (P90) reaches 74% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 74% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-01",
+    "peak_time": "00:00",
+    "p10_mw": 5515.9,
+    "p50_mw": 5897.3,
+    "p90_mw": 6380.8,
+    "actual_peak_mw": 5674.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 0.6,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "upper bound (P90) reaches 71% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 71% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-02",
+    "peak_time": "15:15",
+    "p10_mw": 5654.0,
+    "p50_mw": 6060.6,
+    "p90_mw": 6480.0,
+    "actual_peak_mw": 5819.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 9.7,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 35.8C",
+      "forecast peak is +2.8% versus the previous day",
+      "upper bound (P90) reaches 72% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 72% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-03",
+    "peak_time": "14:30",
+    "p10_mw": 5527.5,
+    "p50_mw": 5933.9,
+    "p90_mw": 6354.8,
+    "actual_peak_mw": 5511.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 4.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 34.6C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 71% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-04",
+    "peak_time": "16:00",
+    "p10_mw": 5344.4,
+    "p50_mw": 5718.1,
+    "p90_mw": 6114.8,
+    "actual_peak_mw": 5499.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 3.5,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 34.2C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 68% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-05",
+    "peak_time": "15:15",
+    "p10_mw": 5458.8,
+    "p50_mw": 5774.0,
+    "p90_mw": 6177.9,
+    "actual_peak_mw": 5499.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 5.4,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "corrected temperature forecast at peak is 35.0C",
+      "forecast peak is +1.0% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 69% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-06",
+    "peak_time": "00:00",
+    "p10_mw": 5151.6,
+    "p50_mw": 5524.5,
+    "p90_mw": 5901.7,
+    "actual_peak_mw": 6126.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 0.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 66% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-07",
+    "peak_time": "15:30",
+    "p10_mw": 5794.3,
+    "p50_mw": 6189.7,
+    "p90_mw": 6701.8,
+    "actual_peak_mw": 6549.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 20.4,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is +12.0% versus the previous day",
+      "corrected temperature forecast at peak is 38.9C",
+      "upper bound (P90) reaches 74% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 74% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-08",
+    "peak_time": "23:15",
+    "p10_mw": 5876.2,
+    "p50_mw": 6289.5,
+    "p90_mw": 6791.3,
+    "actual_peak_mw": 7049.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 7.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "upper bound (P90) reaches 75% of assumed capacity",
+      "forecast peak is +1.6% versus the previous day",
+      "corrected temperature forecast at peak is 32.0C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 75% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-09",
+    "peak_time": "23:15",
+    "p10_mw": 6582.3,
+    "p50_mw": 7088.5,
+    "p90_mw": 7577.9,
+    "actual_peak_mw": 7327.3,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 36.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "forecast peak is +12.7% versus the previous day",
+      "upper bound (P90) reaches 84% of assumed capacity",
+      "corrected temperature forecast at peak is 31.6C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 84% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-10",
+    "peak_time": "00:30",
+    "p10_mw": 6308.9,
+    "p50_mw": 6810.4,
+    "p90_mw": 7280.3,
+    "actual_peak_mw": 7214.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 18.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 81% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 81% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-11",
+    "peak_time": "15:30",
+    "p10_mw": 6495.9,
+    "p50_mw": 7371.4,
+    "p90_mw": 8230.7,
+    "actual_peak_mw": 8180.8,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "LOW",
+    "reliability_reasons": [
+      "critical 24h demand input reconstructed from the nearest available earlier day for 39 of 96 blocks (telemetry gap)",
+      "previous-24h demand telemetry only 59% complete at worst"
+    ],
+    "stress_score": 61.1,
+    "stress_level": "WATCH",
+    "stress_reasons": [
+      "forecast peak is 82% of assumed capacity",
+      "upper bound (P90) reaches 91% of assumed capacity",
+      "forecast peak is +8.2% versus the previous day",
+      "corrected temperature forecast at peak is 42.3C"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "forecast reliability is LOW, so the upper bound is less dependable"
+    ]
+  },
+  {
+    "date": "2025-06-12",
+    "peak_time": "23:00",
+    "p10_mw": 7150.8,
+    "p50_mw": 7795.2,
+    "p90_mw": 8417.6,
+    "actual_peak_mw": 8392.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "MEDIUM",
+    "reliability_reasons": [
+      "48h demand input reconstructed for 39 of 96 blocks",
+      "previous-24h demand telemetry only 59% complete at worst"
+    ],
+    "stress_score": 58.3,
+    "stress_level": "WATCH",
+    "stress_reasons": [
+      "forecast peak is 87% of assumed capacity",
+      "upper bound (P90) reaches 94% of assumed capacity",
+      "forecast peak is +5.7% versus the previous day",
+      "forecast reliability is MEDIUM"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 94% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-13",
+    "peak_time": "23:00",
+    "p10_mw": 7289.5,
+    "p50_mw": 7874.9,
+    "p90_mw": 8423.3,
+    "actual_peak_mw": 8389.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 51.3,
+    "stress_level": "WATCH",
+    "stress_reasons": [
+      "forecast peak is 87% of assumed capacity",
+      "upper bound (P90) reaches 94% of assumed capacity",
+      "corrected temperature forecast at peak is 32.7C",
+      "forecast peak is +1.0% versus the previous day"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 94% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-14",
+    "peak_time": "15:00",
+    "p10_mw": 7348.9,
+    "p50_mw": 7867.9,
+    "p90_mw": 8504.1,
+    "actual_peak_mw": 7939.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 56.5,
+    "stress_level": "WATCH",
+    "stress_reasons": [
+      "forecast peak is 87% of assumed capacity",
+      "upper bound (P90) reaches 94% of assumed capacity",
+      "corrected temperature forecast at peak is 39.8C"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 94% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-15",
+    "peak_time": "15:00",
+    "p10_mw": 6899.1,
+    "p50_mw": 7441.4,
+    "p90_mw": 8041.1,
+    "actual_peak_mw": 7778.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 43.9,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 83% of assumed capacity",
+      "upper bound (P90) reaches 89% of assumed capacity",
+      "corrected temperature forecast at peak is 39.3C"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 89% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-16",
+    "peak_time": "00:00",
+    "p10_mw": 6837.5,
+    "p50_mw": 7397.4,
+    "p90_mw": 7911.0,
+    "actual_peak_mw": 7143.7,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 34.3,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 82% of assumed capacity",
+      "upper bound (P90) reaches 88% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 88% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-17",
+    "peak_time": "00:00",
+    "p10_mw": 6574.2,
+    "p50_mw": 7142.6,
+    "p90_mw": 7646.4,
+    "actual_peak_mw": 6997.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 27.1,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "upper bound (P90) reaches 85% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 85% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-18",
+    "peak_time": "00:00",
+    "p10_mw": 6266.1,
+    "p50_mw": 6795.3,
+    "p90_mw": 7285.8,
+    "actual_peak_mw": 6480.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 17.4,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 81% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 81% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-19",
+    "peak_time": "23:15",
+    "p10_mw": 6018.7,
+    "p50_mw": 6514.2,
+    "p90_mw": 6978.5,
+    "actual_peak_mw": 6899.1,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 9.4,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "upper bound (P90) reaches 78% of assumed capacity",
+      "forecast peak is 72% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 78% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-20",
+    "peak_time": "23:15",
+    "p10_mw": 6361.9,
+    "p50_mw": 6884.8,
+    "p90_mw": 7380.2,
+    "actual_peak_mw": 6704.9,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 27.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 82% of assumed capacity",
+      "forecast peak is +5.7% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 82% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-21",
+    "peak_time": "23:15",
+    "p10_mw": 6330.0,
+    "p50_mw": 6807.4,
+    "p90_mw": 7375.5,
+    "actual_peak_mw": 6943.5,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 19.1,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 82% of assumed capacity",
+      "corrected temperature forecast at peak is 31.0C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 82% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-22",
+    "peak_time": "23:15",
+    "p10_mw": 6321.6,
+    "p50_mw": 6797.5,
+    "p90_mw": 7357.1,
+    "actual_peak_mw": 6823.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 18.0,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 76% of assumed capacity",
+      "upper bound (P90) reaches 82% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 82% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-23",
+    "peak_time": "23:15",
+    "p10_mw": 6592.3,
+    "p50_mw": 7121.7,
+    "p90_mw": 7635.1,
+    "actual_peak_mw": 7475.2,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 32.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "upper bound (P90) reaches 85% of assumed capacity",
+      "forecast peak is +4.8% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 85% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-24",
+    "peak_time": "15:00",
+    "p10_mw": 6884.8,
+    "p50_mw": 7413.1,
+    "p90_mw": 7954.7,
+    "actual_peak_mw": 7073.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 45.9,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 82% of assumed capacity",
+      "upper bound (P90) reaches 88% of assumed capacity",
+      "corrected temperature forecast at peak is 37.0C",
+      "forecast peak is +4.1% versus the previous day"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 88% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-25",
+    "peak_time": "15:00",
+    "p10_mw": 6556.9,
+    "p50_mw": 7077.8,
+    "p90_mw": 7588.8,
+    "actual_peak_mw": 7049.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 29.5,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 79% of assumed capacity",
+      "upper bound (P90) reaches 84% of assumed capacity",
+      "corrected temperature forecast at peak is 35.0C"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 84% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-26",
+    "peak_time": "23:15",
+    "p10_mw": 6510.4,
+    "p50_mw": 7055.2,
+    "p90_mw": 7566.5,
+    "actual_peak_mw": 7421.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 24.8,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 78% of assumed capacity",
+      "upper bound (P90) reaches 84% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 84% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-27",
+    "peak_time": "15:00",
+    "p10_mw": 6807.4,
+    "p50_mw": 7328.6,
+    "p90_mw": 7865.6,
+    "actual_peak_mw": 7584.4,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 42.6,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 81% of assumed capacity",
+      "upper bound (P90) reaches 87% of assumed capacity",
+      "corrected temperature forecast at peak is 36.2C",
+      "forecast peak is +3.9% versus the previous day"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 87% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-28",
+    "peak_time": "15:00",
+    "p10_mw": 6857.3,
+    "p50_mw": 7330.4,
+    "p90_mw": 7943.1,
+    "actual_peak_mw": 7434.6,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 37.2,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 81% of assumed capacity",
+      "upper bound (P90) reaches 88% of assumed capacity",
+      "corrected temperature forecast at peak is 34.8C"
+    ],
+    "peak_risk": "MODERATE",
+    "peak_risk_reasons": [
+      "P90 stays at 88% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-29",
+    "peak_time": "00:00",
+    "p10_mw": 6527.6,
+    "p50_mw": 7058.6,
+    "p90_mw": 7642.7,
+    "actual_peak_mw": 6437.0,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 25.4,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 78% of assumed capacity",
+      "upper bound (P90) reaches 85% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 85% of assumed capacity"
+    ]
+  },
+  {
+    "date": "2025-06-30",
+    "peak_time": "00:00",
+    "p10_mw": 6135.1,
+    "p50_mw": 6631.7,
+    "p90_mw": 7096.4,
+    "actual_peak_mw": 5849.5,
+    "assumed_capacity_mw": 9000.0,
+    "reliability": "HIGH",
+    "reliability_reasons": [
+      "all critical demand inputs observed; previous 24h telemetry complete"
+    ],
+    "stress_score": 12.7,
+    "stress_level": "NORMAL",
+    "stress_reasons": [
+      "forecast peak is 74% of assumed capacity",
+      "upper bound (P90) reaches 79% of assumed capacity"
+    ],
+    "peak_risk": "LOW",
+    "peak_risk_reasons": [
+      "P90 stays at 79% of assumed capacity"
+    ]
+  }
+]

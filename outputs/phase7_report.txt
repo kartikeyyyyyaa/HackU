@@ -1,0 +1,110 @@
+PHASE 7 -- FORECAST RELIABILITY + GRID RISK
+====================================================================================================
+
+PART A -- RELIABILITY RULES
+----------------------------------------------------------------------------------------------------
+  LOW    : lag_24h reconstructed (the model's strongest input is not telemetry)
+  MEDIUM : lag_24h observed, but lag_48h reconstructed OR <95% of the previous 24h observed
+           OR the weather bias correction could not be computed
+  HIGH   : all critical demand inputs observed and the previous 24h of telemetry is complete
+  Every rule maps to a stated reason; nothing is included merely because it was available.
+
+  state distribution                train              test
+    HIGH                66,803             5,682
+    MEDIUM               1,894                96
+    LOW                    451                39
+
+PART B -- RELIABILITY-AWARE WIDENING (calibrated on out-of-fold TRAINING data only)
+----------------------------------------------------------------------------------------------------
+  out-of-fold calibration rows by state: HIGH 34,755, MEDIUM 1,247, LOW 260
+  HIGH   : 34,755 rows -> width factor k = 1.00 (smallest k reaching 80% coverage in calibration)
+  MEDIUM :  1,247 rows -> width factor k = 1.15 (smallest k reaching 80% coverage in calibration)
+  LOW    :    260 rows -> width factor k = 1.65 (smallest k reaching 80% coverage in calibration)
+
+PART C -- BEFORE vs AFTER
+----------------------------------------------------------------------------------------------------
+metric                                current band   reliability-aware   nominal
+----------------------------------------------------------------------------------------------------
+overall P10-P90 coverage                     72.8%               73.1%       80%
+coverage, HIGH reliability                   74.0%               74.0%       80%
+coverage, MEDIUM reliability                 12.5%               29.2%       80%
+coverage, LOW reliability                    51.3%               59.0%       80%
+coverage, peak-period blocks                 62.0%               64.8%       80%
+coverage, daily peaks                        70.5%               72.1%       80%
+P90 breach rate                              13.7%               13.4%       10%
+P10 breach rate                              13.5%               13.5%       10%
+mean interval width (MW)                     810.5               817.1
+  width, HIGH (MW)                           806.9               806.9   (n=5,682)
+  width, MEDIUM (MW)                         952.5              1095.4   (n=96)
+  width, LOW (MW)                            982.4              1620.9   (n=39)
+pinball loss P10                             90.21               90.56
+pinball loss P90                             69.43               68.01
+----------------------------------------------------------------------------------------------------
+
+PART D -- GRID STRESS SCORE (transparent, documented, NOT a learned target)
+----------------------------------------------------------------------------------------------------
+  assumed capacity : 9,000 MW
+  ASSUMED / ILLUSTRATIVE ceiling, not an official or sourced figure. Chosen as a round value above the highest demand observed anywhere in our dataset (8,631.5 MW at 5-min resolution). It exists to demonstrate the index and MUST be replaced with a verified operational value before any external claim.
+  score = 55*u(P50) + 20*u(P90) + 10*growth + 10*heat + 5*unreliability   (max 100)
+    u(x)      = clip((x/capacity - 0.7) / (1.0 - 0.7), 0, 1)
+    growth    = clip(day-over-day change in forecast peak / 0.08, 0, 1)
+    heat      = clip((corrected forecast temp - 30.0) / (42.0 - 30.0), 0, 1)
+    unreliab. = HIGH 0.0, MEDIUM 0.5, LOW 1.0
+  bands: 0-50 NORMAL | 50-75 WATCH | 75-90 HIGH | 90-100 CRITICAL (provisional)
+
+  stress level distribution across the 61 test days: NORMAL 57, WATCH 4
+  peak risk distribution:                           LOW 54, MODERATE 7
+
+PART H -- BEHAVIOUR ON REAL DAYS
+----------------------------------------------------------------------------------------------------
+date             rel      P50      P90   actual  in band?  stress     level  peak risk
+----------------------------------------------------------------------------------------------------
+2025-06-10      HIGH    6,810    7,280    7,214       YES    18.0    NORMAL        LOW
+2025-06-11       LOW    7,371    8,231    8,181       YES    61.1     WATCH   MODERATE
+2025-06-12    MEDIUM    7,795    8,418    8,393       YES    58.3     WATCH   MODERATE
+2025-06-13      HIGH    7,875    8,423    8,389       YES    51.3     WATCH   MODERATE
+2025-05-20      HIGH    7,071    7,558    7,507       YES    31.8    NORMAL        LOW
+2025-06-25      HIGH    7,078    7,589    7,049       YES    29.5    NORMAL        LOW
+----------------------------------------------------------------------------------------------------
+
+  The season peak block, 2025-06-12 23:00 (actual 8,392.6 MW):
+    reliability MEDIUM | P10 7,151 | P50 7,795 | P90 8,418 (base band P90 was 8,336)
+    actual is INSIDE the reliability-aware P90
+
+  11 June 2025 (the known impaired day) reliability reasons:
+    - critical 24h demand input reconstructed from the nearest available earlier day for 39 of 96 blocks (telemetry gap)
+    - previous-24h demand telemetry only 59% complete at worst
+  11 June stress explanation:
+    - forecast peak is 82% of assumed capacity
+    - upper bound (P90) reaches 91% of assumed capacity
+    - forecast peak is +8.2% versus the previous day
+    - corrected temperature forecast at peak is 42.3C
+
+PART G -- EXAMPLE BACKEND DECISION CARD (values only, no UI)
+----------------------------------------------------------------------------------------------------
+{
+  "peak_time": "23:00",
+  "p10_mw": 7150.8,
+  "p50_mw": 7795.2,
+  "p90_mw": 8417.6,
+  "actual_peak_mw": 8392.6,
+  "assumed_capacity_mw": 9000.0,
+  "reliability": "MEDIUM",
+  "reliability_reasons": [
+    "48h demand input reconstructed for 39 of 96 blocks",
+    "previous-24h demand telemetry only 59% complete at worst"
+  ],
+  "stress_score": 58.3,
+  "stress_level": "WATCH",
+  "stress_reasons": [
+    "forecast peak is 87% of assumed capacity",
+    "upper bound (P90) reaches 94% of assumed capacity",
+    "forecast peak is +5.7% versus the previous day",
+    "forecast reliability is MEDIUM"
+  ],
+  "peak_risk": "MODERATE",
+  "peak_risk_reasons": [
+    "P90 stays at 94% of assumed capacity"
+  ],
+  "date": "2025-06-12"
+}

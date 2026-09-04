@@ -1,0 +1,11 @@
+# Demo-mode config (Phase 14, Part D): guarantees zero outbound network calls of any kind at
+# startup, on top of the app itself already making none. Purely operational -- no effect on
+# forecasting logic, UI content, or any locked behavior.
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
+
+[server]
+headless = true
