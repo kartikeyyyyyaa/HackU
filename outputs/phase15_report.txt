@@ -1,0 +1,250 @@
+PHASE 15 -- OPERATOR UI (V2) + PROBLEM-STATEMENT GAP CLOSURE + 2026 DATA PLAN
+============================================================================================
+PS-1: AI-based Electricity Demand Prediction System (Delhi)
+
+Covers three things: (1) the V2 operator dashboard, (2) a check of the delivered system against
+every line of the official Expected Build list, and (3) a concrete, verified plan for adding 2026
+summer data -- including exactly what a retrain invalidates, since that decision has been taken.
+
+No forecasting, scoring, reliability, DISCOM or advisory logic was changed in this phase.
+phase13_backend.py is byte-identical to the Phase 13/14 approved version
+(md5 12705c5eaba7597b681317f90fe22a2e). phase13_dashboard_app.py (V1) is untouched and still runs.
+
+
+============================================================================================
+1. THE V2 OPERATOR DASHBOARD (src/phase15_dashboard_app.py)
+============================================================================================
+PRODUCT NAME: the dashboard is now branded "PowerWatch", with a "DELHI DEMO" tag beside the
+title and the browser tab reading "PowerWatch (Delhi DEMO)". Keeping DEMO visible in the name is
+deliberate and useful -- it reinforces, at a glance, that this runs on recorded historical data
+rather than a live grid feed. V1 (phase13_dashboard_app.py) keeps its original title because it
+is the frozen fallback and was not modified.
+
+A presentation-only rewrite. Information order is now: grid condition -> expected demand -> when
+-> how serious -> where -> what to watch, with all technical depth preserved behind expanders.
+
+THEME HANDLING (fixed after first review): the initial V2 hardcoded a light-theme palette, so on
+a dark-themed machine the advisory cards, the page title, the Proof Mode headline figures and
+most body text rendered near-black on a dark background and were effectively invisible. Every
+colour is now resolved per render from the viewer's real theme via st.context.theme, with two
+tuned palettes (semantic status colours differ between themes so a WATCH or a LOW reads clearly
+in both). If theme detection is ever unavailable the palette falls back to light, and body text
+inherits rather than being pinned, so no text can become invisible. Verified by rendering the
+whole app under both an emulated dark and an emulated light browser theme.
+
+Key changes
+  - A one-line plain-English grid-condition banner, composed from real backend fields.
+  - Four headline numbers, no duplicates: expected peak, peak time, high-demand planning level,
+    grid condition (score out of 100).
+  - Main chart splits at the forecast issue line: solid dark = demand that had already happened
+    when the forecast was issued; blue + band = what the model expected next. The actual outcome
+    is behind an off-by-default checkbox, so the default view never shows the operator a future
+    the forecast could not have known.
+  - Plain-English primary labels with the technical term kept as a secondary label
+    ("Expected peak demand ... central forecast (P50)"), plus a hover glossary on every
+    meaningful term.
+  - Advisory text is used VERBATIM from the Phase 12 rule engine. Nothing was reworded.
+
+Two errors found and fixed in the new copy during this phase (both caught by testing, not review)
+  - The Proof Mode verdict stated the error direction backwards. peak_abs_err_mw is FORECAST
+    MINUS ACTUAL, so a negative value means the actual came in ABOVE the forecast. Corrected and
+    re-verified across all 60 replayable days.
+  - The verdict said "actual demand stayed inside the predicted range" unqualified. That is only
+    measured AT THE PEAK BLOCK. On the flagship 12 June event the actual is inside the band for
+    only 27% of the window, and the chart shows it. The banner now reads "At the peak, ..." and
+    the window figure is disclosed underneath. An unqualified claim would have been contradicted
+    by the chart directly beneath it.
+
+Testing
+  - All 61 test days: peak, P90, stress score, level, peak risk and reliability are IDENTICAL to
+    V1. Zero mismatches.
+  - Full interaction sweep with socket.connect() hard-blocked: 0 exceptions.
+  - Verified at 1366x768, 1600x900, 1920x1080. At the smallest size the condition banner and all
+    four headline numbers sit above the fold.
+
+Run it:   cd src  &&  streamlit run phase15_dashboard_app.py
+Fallback: cd src  &&  streamlit run phase13_dashboard_app.py
+
+
+============================================================================================
+2. CHECK AGAINST THE OFFICIAL "EXPECTED BUILD" LIST
+============================================================================================
+PS bullet 1 -- "Time-series model that forecasts next-day/next-week electricity demand using
+               historical load + weather data (temperature is the biggest driver in Delhi)"
+   STATUS: MET for next-day. Genuine 24-hour-ahead forecasting, leakage-safe by construction,
+   with temperature as a central driver plus adaptive forecast-bias correction.
+   NEXT-WEEK IS NOT BUILT, and cannot be built from the data on hand -- see section 3.
+   The bullet reads "next-day/next-week", i.e. either horizon satisfies it. The deliberate
+   position is: one horizon, validated honestly, rather than two with one unvalidated.
+
+PS bullet 2 -- "Dashboard showing predicted vs actual demand, with alerts when forecast nears
+               grid capacity"
+   STATUS: MET. Predicted vs actual is shown in Proof Mode (and optionally on Overview via the
+   hindsight toggle). Capacity-proximity alerting is the Grid Stress Score + peak-risk tiers +
+   the advisory engine, all driven off utilisation against the illustrative 9,000 MW reference.
+
+PS bullet 3 -- "Area/feeder-wise breakdown so discoms can plan load balancing"
+   STATUS: MET at AREA level; feeder level is not achievable honestly.
+   Delhi's DISCOMs are the licensed distributors for defined parts of the city, so the utility
+   breakdown IS the area breakdown. As of this phase the table leads with the area:
+        South & West Delhi                    -- BRPL
+        Central & East Delhi                  -- BYPL
+        North & North-West Delhi              -- TPDDL
+        New Delhi (NDMC) & Delhi Cantonment   -- NDMC + MES (combined residual)
+   These service areas are public licensing facts. Only the MW figures beside them are modeled.
+   FEEDER LEVEL IS DELIBERATELY NOT BUILT: feeder telemetry is not publicly available, and this
+   project does not invent data. That is stated in the UI rather than hidden.
+
+PS bullet 4 -- "Optional: renewable (rooftop solar) input adjustment for net demand"
+   STATUS: MET, and labelled as an assumption rather than a model output.
+
+
+============================================================================================
+3. WHY "NEXT-WEEK" IS BLOCKED BY DATA (verified this phase)
+============================================================================================
+delhi_weather_forecast_day1.csv contains exactly two columns: timestamp, temp_fcst_C. It is a
+DAY-1 horizon only -- there is no day-2 ... day-7 forecast temperature anywhere in the project.
+A genuine 7-day-ahead, weather-driven forecast therefore cannot be built from the data on hand,
+and the multi-horizon data cannot be fetched (see section 4 -- network egress blocks the source
+from both the cloud container and the local machine).
+
+The one option that IS possible with existing data: a WEATHER-FREE 7-day outlook using calendar
+features plus demand lags at >=168h. It would be genuinely 7-day-ahead and honest, but materially
+less accurate than the 24h model, and it would need its own validation phase. Not built.
+
+ALSO VERIFIED, and worth knowing before judging: the forecast-weather file ends 2025-07-01. That
+is WHY the approved test period ends 30 June 2025 -- it is a hard data boundary, not an arbitrary
+choice. As a direct consequence there are 195 days of load data already in the project
+(2025-07-01 -> 2026-01-12) that CANNOT be used for honest 24h-ahead evaluation, because no
+matching day-ahead forecast weather exists for that span.
+
+
+============================================================================================
+4. CURRENT DATA COVERAGE (measured, not assumed)
+============================================================================================
+  load_data.csv                    2023-04-01 -> 2026-01-12   293,184 rows
+  delhi_weather_hourly.csv         2023-04-01 -> 2026-01-12    24,480 rows
+  delhi_weather_forecast_day1.csv  2023-04-01 -> 2025-07-01    19,260 rows   <-- binding limit
+
+  Summer (May-June) coverage in the load data:
+     2023    17,568 rows    max 7,212.6 MW     in training
+     2024    17,568 rows    max 8,631.5 MW     in training  <-- ALREADY INCLUDED
+     2025    17,568 rows    max 8,419.3 MW     the held-out test period
+     2026    none                              not in the dataset at all
+
+  Note: 2024's peak (8,631.5 MW) is HIGHER than 2025's. The model has already been trained on a
+  hotter summer than the one it is tested on. "Add 2024 data" is already satisfied.
+
+  Note on 8,419.3 vs the quoted 8,392.6 MW season peak: 8,419.3 is the raw 5-minute maximum;
+  8,392.6 is the maximum 15-minute average, which is the resolution the model works at. This is
+  the same instantaneous-vs-15-minute-average distinction disclosed throughout the project.
+
+  ACQUISITION BLOCKED: archive-api.open-meteo.com, previous-runs-api.open-meteo.com and
+  delhisldc.org are all refused by network policy from BOTH the cloud container and the local
+  machine's VM. 2026 data must be downloaded manually.
+
+
+============================================================================================
+5. HOW TO OBTAIN 2026 SUMMER DATA (do this on an unrestricted network)
+============================================================================================
+Three files are needed, and all three must extend or the new data is unusable. Match the existing
+column names and formats EXACTLY, then append to the current files (do not replace history).
+
+(a) LOAD -- timestamp, load_MW   (5-minute resolution, header exactly "timestamp,load_MW",
+    timestamps as "YYYY-MM-DD HH:MM:SS")
+    Source: the original Kaggle dataset prash4nt/delhi-sldc-load-data-5-min-resolution -- check
+    whether it has been refreshed past 2026-01-12. If not, the underlying source is Delhi SLDC
+    (delhisldc.org) daily load curves, which must be scraped per-day.
+    THIS IS THE HARD ONE. Without it, new weather data is useless.
+
+(b) OBSERVED WEATHER -- timestamp, temp_C   (hourly, timestamps ISO "YYYY-MM-DDTHH:MM:SS")
+    https://archive-api.open-meteo.com/v1/archive
+        ?latitude=28.6139&longitude=77.2090
+        &start_date=2025-07-01&end_date=<today>
+        &hourly=temperature_2m&timezone=Asia%2FKolkata
+    Rename temperature_2m -> temp_C.
+
+(c) DAY-AHEAD FORECAST WEATHER -- timestamp, temp_fcst_C   (hourly)
+    https://previous-runs-api.open-meteo.com/v1/forecast
+        ?latitude=28.6139&longitude=77.2090
+        &start_date=2025-07-01&end_date=<today>
+        &hourly=temperature_2m_previous_day1&timezone=Asia%2FKolkata
+    Rename temperature_2m_previous_day1 -> temp_fcst_C.
+    CHECK THE RETURNED RANGE. This endpoint's archive depth is limited and was not verifiable
+    from here. If it will not serve back to 2025-07-01, the usable new window shrinks to whatever
+    it does return -- and that, not the load data, becomes the new binding constraint.
+    If this file cannot be extended, STOP: without day-ahead forecast weather the new period
+    cannot be evaluated as a genuine 24h-ahead forecast, only as a hindsight fit.
+
+
+============================================================================================
+6. RETRAIN CHECKLIST -- everything that breaks (decision taken: retrain including 2026)
+============================================================================================
+Retraining is not a one-line change. Each item below is currently a verified, quoted, or
+hardcoded artefact of the 2025 test period. Work top to bottom.
+
+CODE CONSTANTS (src/phase13_backend.py)
+  [ ] line 43  TRAIN_END / TEST_START / TEST_END -- decide the new split. Recommended: train on
+               everything before the 2026 summer, test on the 2026 summer, so the model is still
+               judged on a season it never saw.
+  [ ] line 46-47  KNOWN_PEAK_TS / KNOWN_PEAK_MW -- the pre-flight integrity gate. Must be reset to
+               the NEW test period's verified peak, or the run will abort (by design).
+  [ ] RATIO (line 57) -- the DISCOM allocation ratios were derived from dated public figures for
+               2025-06-12. Decide explicitly: keep them as the disclosed 2025-based ratio, or
+               re-source for 2026. Do not silently carry them over without saying which.
+
+REFIT / RE-VALIDATE (do not copy old numbers forward)
+  [ ] Reliability band-widening factors (HIGH 1.00 / MEDIUM 1.15 / LOW 1.65) -- these were fitted
+      on out-of-fold TRAINING residuals. They must be refit, not reused.
+  [ ] Full-test-period MAPE. The current approved figure is 5.94%. It WILL change. Every place it
+      appears must be updated -- see below.
+  [ ] Proof Mode event selection. PRIMARY = highest-actual-demand day; SECONDARY = worst genuine
+      peak miss that also breached P90. Both must be re-found by OBJECTIVE SCAN over the new test
+      period. Do not hand-pick a flattering day.
+  [ ] Grid Stress Score weights and thresholds (37.5/37.5/10/10/5; NORMAL/WATCH/HIGH/CRITICAL
+      bands). These were fixed by the Phase 8 design experiment. DO NOT re-tune them to make the
+      new data look better -- that would invalidate the experiment that justified them.
+
+HARDCODED DATES IN THE UI (both dashboards)
+  [ ] phase13_dashboard_app.py lines 130, 206, 283, 284, 298  (default day, PROOF_EVENTS)
+  [ ] phase15_dashboard_app.py lines 276, 450, 569, 570, 585  (default day, EVENTS)
+
+DOCUMENTS AND THE DEMO ITSELF
+  [ ] outputs/phase14_report.txt -- the approved-claims sheet, the recommended demo scenario, the
+      60-second script, the 3-minute technical explanation and the judge Q&A all quote 2025
+      numbers (7,795 / 8,418 / 8,392.6 / 62.4 / -597.4 MW / 5.94%). All must be regenerated.
+  [ ] The +5C What-If demo scenario -- re-check that it still crosses into HIGH risk on the new
+      data. It is currently the ONLY state anywhere in the system that reaches HIGH.
+  [ ] Re-run the Phase 14 cross-view consistency check and the offline/demo-mode check.
+
+RECOMMENDED SAFETY STEP
+  [ ] Copy data/ and src/ to a dated backup folder BEFORE appending anything. The current system
+      is fully validated and presentation-ready; a mid-retrain failure must not cost you that.
+      Keeping the 2025-validated build runnable also lets you show BOTH: "validated on 2025,
+      re-validated on 2026."
+
+
+============================================================================================
+7. JUDGE Q&A -- THREE ADDITIONS FROM THIS PHASE
+============================================================================================
+Q: The problem statement says next-day OR next-week. Why only next-day?
+   Because next-week could not be validated honestly with the data available. Our day-ahead
+   weather forecast archive has a day-1 horizon only -- no day-2 to day-7 temperature. We could
+   have shipped a 7-day number, but it would have been either weather-blind or quietly using
+   weather we would not actually have in advance. We chose the horizon we could prove, and Proof
+   Mode exists precisely so you can check that claim against a real past event.
+
+Q: Where is the feeder-level breakdown?
+   We deliver area level, which is as far as the public data honestly goes. Delhi's distributors
+   each serve a defined part of the city, so the breakdown you see is an area breakdown: BRPL for
+   South and West, BYPL for Central and East, TPDDL for North and North-West. Feeder-level
+   telemetry is not publicly available, so building a feeder view would have meant inventing the
+   numbers. We label ours as modeled estimates and say plainly where the data stops.
+
+Q: Why does your test period end in June 2025 when your load data runs to January 2026?
+   Because our day-ahead forecast weather ends on 1 July 2025, and without it a forecast cannot be
+   evaluated as genuinely 24 hours ahead -- only as a hindsight fit. We have 195 days of load data
+   we deliberately do not score against, rather than quietly relax the standard.
+
+
+PHASE 15 COMPLETE -- WAITING FOR APPROVAL.

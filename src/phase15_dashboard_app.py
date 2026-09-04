@@ -1,7 +1,7 @@
 """
-DELHI PEAK INTELLIGENCE -- operator dashboard (V2 presentation layer)
+POWERWATCH (Delhi DEMO) -- operator dashboard (V2 presentation layer)
 =====================================================================
-This is a PRESENTATION-ONLY rewrite of phase13_dashboard_app.py.
+This is a PRESENTATION-ONLY layer over phase13_backend.py.
 
 Nothing in the forecasting, uncertainty, reliability, stress-scoring, DISCOM
 allocation or advisory logic is changed, re-implemented or re-tuned here. Every
@@ -11,15 +11,15 @@ backend edits behind this file at all -- phase13_backend.py is byte-identical to
 the version approved in Phase 13/14, and phase13_dashboard_app.py (V1) is left
 untouched and still runnable as a fallback.
 
-What IS different is the information hierarchy: the operational answer first
-(condition -> expected demand -> when -> how serious -> where -> what to watch),
-plain-English labels with the technical term kept as a secondary label or
-tooltip, and the deep technical material moved behind progressive disclosure
-rather than deleted.
+THEMING: every colour is resolved per render from the viewer's actual theme
+(st.context.theme). The dashboard is readable in both light and dark mode; no
+text colour is hardcoded to one theme. If theme detection is ever unavailable
+the palette falls back to light and body text still inherits, so nothing can
+become invisible.
 
-Honesty rules preserved verbatim from V1:
-  - This app runs on HISTORICAL data (approved test period 1 May - 30 Jun 2025).
-    It is never described as live telemetry, and no date is ever called "today".
+Honesty rules preserved verbatim:
+  - Runs on HISTORICAL data (approved test period 1 May - 30 Jun 2025). Never
+    described as live telemetry, and no date is ever called "today".
   - Capacity (9,000 MW) is ILLUSTRATIVE, never an official declared limit.
   - DISCOM figures are MODELED ESTIMATES, never feeder telemetry.
   - What-If temperature is a genuine model recomputation; solar is disclosed,
@@ -45,19 +45,53 @@ from phase13_backend import (   # noqa: E402
     W_P50_UTIL, W_P90_UTIL, W_GROWTH, W_HEAT, W_RELIABILITY,
 )
 
-st.set_page_config(page_title="Delhi Peak Intelligence", layout="wide",
+APP_NAME = "PowerWatch"
+APP_TAG = "DELHI DEMO"
+
+st.set_page_config(page_title=f"{APP_NAME} (Delhi DEMO)", layout="wide",
                    initial_sidebar_state="collapsed")
 
-# ============================================================================
-# DESIGN TOKENS -- semantic only, never colour alone (every state also has text)
-# ============================================================================
-OK, WARN, BAD, WORST = "#15803d", "#b45309", "#b91c1c", "#7c2d12"
-INK, MUTE, LINE, FORECAST = "#0f172a", "#64748b", "#e2e8f0", "#4f46e5"
 
-STRESS_COLOR = {"NORMAL": OK, "WATCH": WARN, "HIGH": BAD, "CRITICAL": WORST}
-RISK_COLOR = {"LOW": OK, "MODERATE": WARN, "HIGH": BAD, "CRITICAL": WORST}
-REL_COLOR = {"HIGH": OK, "MEDIUM": WARN, "LOW": BAD}
+# ============================================================================
+# THEME-AWARE PALETTE
+# Resolved per render from the viewer's real theme. Semantic colours are tuned
+# separately for each theme so that a status is legible either way; body text is
+# never pinned to a single theme's colour.
+# ============================================================================
+LIGHT = dict(ink="#0f172a", mute="#5b6678", line="#e2e8f0", surf="#f8fafc",
+             ok="#15803d", warn="#b45309", bad="#b91c1c", worst="#7c2d12",
+             fc="#4f46e5", hist="#0f172a", band="rgba(79,70,229,0.16)", tint="14")
+DARK = dict(ink="#e8eefb", mute="#9fadc4", line="#2c3547", surf="#151a24",
+            ok="#4ade80", warn="#fbbf24", bad="#f87171", worst="#fb923c",
+            fc="#8b96f8", hist="#e8eefb", band="rgba(139,150,248,0.24)", tint="26")
+PAL = LIGHT
+
+
+def resolve_palette():
+    global PAL
+    try:
+        PAL = DARK if st.context.theme.type == "dark" else LIGHT
+    except Exception:      # detection unavailable -> safe, readable default
+        PAL = LIGHT
+    return PAL
+
+
 STRESS_DOT = {"NORMAL": "🟢", "WATCH": "🟡", "HIGH": "🔴", "CRITICAL": "🔴"}
+
+
+def stress_c(level):
+    return {"NORMAL": PAL["ok"], "WATCH": PAL["warn"],
+            "HIGH": PAL["bad"], "CRITICAL": PAL["worst"]}[level]
+
+
+def risk_c(risk):
+    return {"LOW": PAL["ok"], "MODERATE": PAL["warn"],
+            "HIGH": PAL["bad"], "CRITICAL": PAL["worst"]}[risk]
+
+
+def rel_c(rel):
+    return {"HIGH": PAL["ok"], "MEDIUM": PAL["warn"], "LOW": PAL["bad"]}[rel]
+
 
 # Plain-English meaning of each reliability state. These restate the EXISTING
 # Phase 7 reliability rule in operator language -- the rule itself is unchanged.
@@ -69,7 +103,6 @@ REL_PLAIN = {
 
 # ============================================================================
 # GLOSSARY -- one short plain-English line per technical term, shown on hover.
-# Deliberately short: a tooltip is a reminder, not a paragraph.
 # ============================================================================
 G = {
     "mw": "Megawatts — how much electricity is being used at one moment. "
@@ -116,29 +149,59 @@ G = {
 
 
 def tip(text, key):
-    """Label with a hover explanation. Uses a native browser tooltip -- no framework."""
-    return (f'<span title="{G[key]}" style="border-bottom:1px dotted {MUTE};cursor:help">'
-            f'{text}</span> <span style="color:{MUTE};font-size:0.8em" title="{G[key]}">ⓘ</span>')
+    """Label with a hover explanation. Native browser tooltip -- no framework."""
+    return (f'<span title="{G[key]}" style="border-bottom:1px dotted {PAL["mute"]};cursor:help">'
+            f'{text}</span> <span style="color:{PAL["mute"]};font-size:0.8em" title="{G[key]}">ⓘ</span>')
+
+
+# ---------------------------------------------------------------- typography
+def page_title():
+    st.markdown(
+        f'<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">'
+        f'<span style="font-size:2.05rem;font-weight:800;letter-spacing:-.02em;'
+        f'color:{PAL["ink"]};line-height:1.1">{APP_NAME}</span>'
+        f'<span style="background:{PAL["fc"]}{PAL["tint"]};color:{PAL["fc"]};'
+        f'border:1px solid {PAL["fc"]}66;padding:2px 9px;border-radius:11px;'
+        f'font-size:0.7rem;font-weight:800;letter-spacing:.09em">{APP_TAG}</span></div>'
+        f'<div style="font-size:0.95rem;color:{PAL["mute"]};margin-top:1px">'
+        f'Day-ahead electricity demand and grid-risk decision support</div>',
+        unsafe_allow_html=True)
+
+
+def section(title, key=None, sub=None):
+    """One consistent section heading style, noticeably larger than body text."""
+    label = tip(title, key) if key else title
+    st.markdown(
+        f'<div style="font-size:1.22rem;font-weight:750;color:{PAL["ink"]};'
+        f'letter-spacing:-.01em;margin:20px 0 0 0">{label}</div>'
+        + (f'<div style="font-size:0.88rem;color:{PAL["mute"]};margin:2px 0 10px 0">{sub}</div>'
+           if sub else '<div style="height:9px"></div>'),
+        unsafe_allow_html=True)
 
 
 def kicker(text, key=None):
-    """Small uppercase label above a value."""
     body = tip(text, key) if key else text
-    st.markdown(f'<div style="font-size:0.72rem;letter-spacing:.06em;text-transform:uppercase;'
-                f'color:{MUTE};font-weight:600;margin-bottom:2px">{body}</div>',
+    st.markdown(f'<div style="font-size:0.73rem;letter-spacing:.07em;text-transform:uppercase;'
+                f'color:{PAL["mute"]};font-weight:700;margin-bottom:3px">{body}</div>',
                 unsafe_allow_html=True)
 
 
-def big(value, sub=None, color=INK):
-    st.markdown(f'<div style="font-size:1.9rem;font-weight:700;color:{color};line-height:1.1">'
+def big(value, sub=None, color=None):
+    c = color or PAL["ink"]
+    st.markdown(f'<div style="font-size:1.95rem;font-weight:750;color:{c};line-height:1.12">'
                 f'{value}</div>' +
-                (f'<div style="font-size:0.8rem;color:{MUTE};margin-top:1px">{sub}</div>' if sub else ""),
-                unsafe_allow_html=True)
+                (f'<div style="font-size:0.81rem;color:{PAL["mute"]};margin-top:2px">{sub}</div>'
+                 if sub else ""), unsafe_allow_html=True)
 
 
 def chip(text, color):
-    st.markdown(f'<span style="background:{color}14;color:{color};border:1px solid {color}55;'
-                f'padding:2px 10px;border-radius:12px;font-weight:700;font-size:0.8rem">{text}</span>',
+    st.markdown(f'<span style="background:{color}{PAL["tint"]};color:{color};'
+                f'border:1px solid {color}66;padding:2px 10px;border-radius:12px;'
+                f'font-weight:700;font-size:0.8rem">{text}</span>', unsafe_allow_html=True)
+
+
+def body(text, size="0.93rem"):
+    st.markdown(f'<div style="font-size:{size};color:{PAL["ink"]}">{text}</div>',
                 unsafe_allow_html=True)
 
 
@@ -173,8 +236,8 @@ def actual_series(_B):
 # ============================================================================
 def headline_sentence(state):
     pk, t, u90 = state["p50"], state["peak_time"], state["util90"]
-    lead = (f"Demand is expected to peak near **{pk:,.0f} MW at {t:%H:%M}**, with the "
-            f"high-demand planning level reaching **{u90 * 100:.0f}%** of modeled capacity.")
+    lead = (f"Demand is expected to peak near {pk:,.0f} MW at {t:%H:%M}, with the "
+            f"high-demand planning level reaching {u90 * 100:.0f}% of modeled capacity.")
     tail = {
         "NORMAL": "This looks like a normal day for the grid.",
         "WATCH": "That is tighter than a comfortable margin — worth watching through the peak window.",
@@ -208,9 +271,21 @@ def stress_components(B, state):
 # ============================================================================
 def context_strip(line):
     st.markdown(
-        f'<div style="background:#f8fafc;border:1px solid {LINE};border-radius:6px;'
-        f'padding:6px 12px;font-size:0.8rem;color:{MUTE};margin-bottom:14px">{line}</div>',
+        f'<div style="background:{PAL["surf"]};border:1px solid {PAL["line"]};border-radius:7px;'
+        f'padding:7px 13px;font-size:0.83rem;color:{PAL["mute"]};margin-bottom:14px">{line}</div>',
         unsafe_allow_html=True)
+
+
+def chart_layout(fig, height=330):
+    fig.update_layout(
+        height=height, margin=dict(l=8, r=8, t=34, b=8), hovermode="x unified",
+        legend=dict(orientation="h", y=1.16, x=0, font=dict(size=11, color=PAL["ink"])),
+        yaxis_title="MW", xaxis_title=None,
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color=PAL["ink"]),
+        yaxis=dict(gridcolor=PAL["line"], zerolinecolor=PAL["line"], color=PAL["mute"]),
+        xaxis=dict(gridcolor=PAL["line"], zerolinecolor=PAL["line"], color=PAL["mute"]))
+    return fig
 
 
 def data_notes(extra=None):
@@ -241,7 +316,7 @@ DISCOM_AREA = {
 }
 
 
-def discom_block(discoms, note_key="modeled"):
+def discom_block(discoms):
     rows = []
     for k in list(INDIVIDUALLY_MODELED_DISCOMS) + ["NDMC_MES_RESIDUAL"]:
         v = discoms[k]
@@ -291,15 +366,16 @@ def render_overview(B):
             f"<span title=\"{G['historical']}\">recorded historical day, not live telemetry ⓘ</span>")
 
     lvl, risk = state["stress_level"], state["peak_risk"]
+    sc_col = stress_c(lvl)
 
     # ---- 1. THE ANSWER ----------------------------------------------------
     st.markdown(
-        f'<div style="border-left:6px solid {STRESS_COLOR[lvl]};background:{STRESS_COLOR[lvl]}0d;'
-        f'border-radius:6px;padding:12px 16px;margin-bottom:14px">'
-        f'<div style="font-size:1.25rem;font-weight:800;color:{STRESS_COLOR[lvl]};'
-        f'letter-spacing:.02em">{STRESS_DOT[lvl]} GRID CONDITION: {lvl}</div>'
-        f'<div style="font-size:0.95rem;color:{INK};margin-top:4px">'
-        f'{headline_sentence(state).replace("**", "")}</div></div>',
+        f'<div style="border-left:6px solid {sc_col};background:{sc_col}{PAL["tint"]};'
+        f'border-radius:7px;padding:13px 17px;margin-bottom:15px">'
+        f'<div style="font-size:1.32rem;font-weight:800;color:{sc_col};letter-spacing:.01em">'
+        f'{STRESS_DOT[lvl]} GRID CONDITION: {lvl}</div>'
+        f'<div style="font-size:0.97rem;color:{PAL["ink"]};margin-top:5px">'
+        f'{headline_sentence(state)}</div></div>',
         unsafe_allow_html=True)
 
     # ---- 2. HEADLINE NUMBERS (no duplicates) ------------------------------
@@ -315,11 +391,11 @@ def render_overview(B):
         big(f"{state['p90']:,.0f} MW", f"{state['util90'] * 100:.0f}% of modeled capacity (P90)")
     with k4:
         kicker("Grid condition", "condition")
-        big(f"{state['stress_score']:.0f}<span style='font-size:1rem;color:%s'>/100</span>" % MUTE,
-            None, STRESS_COLOR[lvl])
-        chip(f"{lvl} · peak risk {risk}", STRESS_COLOR[lvl])
+        big(f"{state['stress_score']:.0f}"
+            f"<span style='font-size:1rem;color:{PAL['mute']}'>/100</span>", None, sc_col)
+        chip(f"{lvl} · peak risk {risk}", sc_col)
 
-    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
     # ---- 3. THE PICTURE ---------------------------------------------------
     now, peak = state["now"], state["peak_time"]
@@ -330,47 +406,41 @@ def render_overview(B):
 
     reveal = st.session_state.get("ov_reveal", False)
     fig = go.Figure()
-    # Band is drawn FIRST so it sits underneath the lines; legendrank (not draw order) puts the
-    # legend into reading order: what already happened -> forecast -> the range around it.
+    # Band drawn FIRST so it sits underneath the lines; legendrank sets reading order.
     fig.add_trace(go.Scatter(x=fwd.index, y=fwd["p90"], line=dict(width=0),
                              showlegend=False, hoverinfo="skip"))
     fig.add_trace(go.Scatter(x=fwd.index, y=fwd["p10"], line=dict(width=0), fill="tonexty",
-                             fillcolor="rgba(79,70,229,0.16)", name="Expected range", legendrank=3,
+                             fillcolor=PAL["band"], name="Expected range", legendrank=3,
                              hovertemplate="%{y:,.0f} MW<extra>range</extra>"))
     if len(hist):
         fig.add_trace(go.Scatter(x=hist.index, y=hist.values, name="Already happened", legendrank=1,
-                                 line=dict(color=INK, width=2),
+                                 line=dict(color=PAL["hist"], width=2),
                                  hovertemplate="%{y:,.0f} MW<extra>actual</extra>"))
     fig.add_trace(go.Scatter(x=fwd.index, y=fwd["p50"], name="Forecast", legendrank=2,
-                             line=dict(color=FORECAST, width=2.6),
+                             line=dict(color=PAL["fc"], width=2.6),
                              hovertemplate="%{y:,.0f} MW<extra>forecast</extra>"))
     if reveal:
         fig.add_trace(go.Scatter(x=fwd.index, y=fwd["actual"], name="What actually happened",
-                                 line=dict(color=INK, width=1.6, dash="dot"),
+                                 legendrank=4, line=dict(color=PAL["hist"], width=1.6, dash="dot"),
                                  hovertemplate="%{y:,.0f} MW<extra>actual</extra>"))
     fig.add_trace(go.Scatter(x=[peak], y=[state["p50"]], mode="markers+text",
-                             marker=dict(color=STRESS_COLOR[lvl], size=11,
-                                         line=dict(color="white", width=2)),
+                             marker=dict(color=sc_col, size=11,
+                                         line=dict(color=PAL["surf"], width=2)),
                              text=[f"  peak {state['p50']:,.0f} MW"], textposition="top center",
-                             textfont=dict(color=STRESS_COLOR[lvl], size=12), showlegend=False,
+                             textfont=dict(color=sc_col, size=12), showlegend=False,
                              hoverinfo="skip"))
-    fig.add_vline(x=now.to_pydatetime(), line_dash="dot", line_color=MUTE,
+    fig.add_vline(x=now.to_pydatetime(), line_dash="dot", line_color=PAL["mute"],
                   annotation_text="forecast issued", annotation_position="top left",
-                  annotation_font=dict(size=11, color=MUTE))
-    fig.add_hline(y=ASSUMED_CAPACITY_MW, line_dash="dash", line_color=BAD, opacity=0.45,
+                  annotation_font=dict(size=11, color=PAL["mute"]))
+    fig.add_hline(y=ASSUMED_CAPACITY_MW, line_dash="dash", line_color=PAL["bad"], opacity=0.5,
                   annotation_text=f"modeled capacity {ASSUMED_CAPACITY_MW:,.0f} MW (illustrative)",
-                  annotation_position="top right", annotation_font=dict(size=10, color=BAD))
-    fig.update_layout(height=330, margin=dict(l=8, r=8, t=34, b=8), hovermode="x unified",
-                      legend=dict(orientation="h", y=1.16, x=0, font=dict(size=11)),
-                      yaxis_title="MW", xaxis_title=None,
-                      plot_bgcolor="white", paper_bgcolor="white",
-                      yaxis=dict(gridcolor=LINE), xaxis=dict(gridcolor=LINE))
-    st.plotly_chart(fig, width="stretch")
+                  annotation_position="top right", annotation_font=dict(size=10, color=PAL["bad"]))
+    st.plotly_chart(chart_layout(fig), width="stretch")
 
     cc1, cc2 = st.columns([3, 1])
     with cc1:
-        st.caption("Solid dark line: demand that had already happened when the forecast was issued. "
-                   "Blue line and shaded band: what the model expected for the following 24 hours.")
+        st.caption("Solid line: demand that had already happened when the forecast was issued. "
+                   "Coloured line and shaded band: what the model expected for the following 24 hours.")
     with cc2:
         st.checkbox("Show actual outcome", key="ov_reveal",
                     help="Overlays what demand actually turned out to be. This is hindsight — the "
@@ -381,23 +451,23 @@ def render_overview(B):
     # ---- 4. WHAT TO PAY ATTENTION TO + RELIABILITY ------------------------
     a, b = st.columns([1.55, 1])
     with a:
-        st.markdown("##### What to pay attention to")
-        advs = B.recommend(state)
-        for adv in advs:
+        section("What to pay attention to")
+        for adv in B.recommend(state):
             st.markdown(
-                f'<div style="border:1px solid {LINE};border-left:4px solid {MUTE};border-radius:5px;'
-                f'padding:8px 12px;margin-bottom:7px">'
-                f'<div style="font-weight:700;font-size:0.83rem;color:{INK}">{adv["category"]}</div>'
-                f'<div style="font-size:0.9rem;color:{INK};margin:2px 0">{adv["advisory"]}</div>'
-                f'<div style="font-size:0.78rem;color:{MUTE}">Why: {adv["reason"]}</div></div>',
+                f'<div style="border:1px solid {PAL["line"]};border-left:4px solid {PAL["mute"]};'
+                f'background:{PAL["surf"]};border-radius:6px;padding:9px 13px;margin-bottom:8px">'
+                f'<div style="font-weight:800;font-size:0.82rem;letter-spacing:.04em;'
+                f'color:{PAL["ink"]}">{adv["category"]}</div>'
+                f'<div style="font-size:0.93rem;color:{PAL["ink"]};margin:3px 0">{adv["advisory"]}</div>'
+                f'<div style="font-size:0.79rem;color:{PAL["mute"]}">Why: {adv["reason"]}</div></div>',
                 unsafe_allow_html=True)
         st.caption("Generated by a fixed rule set from the numbers above — not free-form AI text.")
     with b:
-        st.markdown("##### Can we trust this forecast?")
+        section("Can we trust this forecast?")
         rel = state["reliability"]
-        chip(f"{rel} reliability", REL_COLOR[rel])
-        st.markdown(f'<div style="font-size:0.88rem;color:{INK};margin-top:6px">{REL_PLAIN[rel]}</div>',
-                    unsafe_allow_html=True)
+        chip(f"{rel} reliability", rel_c(rel))
+        st.markdown(f'<div style="font-size:0.9rem;color:{PAL["ink"]};margin-top:7px">'
+                    f'{REL_PLAIN[rel]}</div>', unsafe_allow_html=True)
         with st.expander("What affected it"):
             for r in state["reliability_reasons"]:
                 st.write(f"- {r}")
@@ -406,9 +476,7 @@ def render_overview(B):
                        "date — by design.")
 
     # ---- 5. WHERE THE PRESSURE IS ----------------------------------------
-    st.markdown("##### Where the pressure is — by area of Delhi")
-    st.markdown(f'<div style="font-size:0.85rem;color:{MUTE};margin-top:-6px;margin-bottom:6px">'
-                f'{tip("Modeled area / distributor breakdown", "area")}</div>', unsafe_allow_html=True)
+    section("Where the pressure is — by area of Delhi", "area")
     discom_block(state["discoms"])
 
     # ---- 6. TECHNICAL DRILL-DOWN -----------------------------------------
@@ -458,12 +526,15 @@ def render_whatif(B):
 
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown(f"**{tip('If temperature were different', 'temp_scn')}**", unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:1.02rem;font-weight:700;color:{PAL["ink"]}">'
+                    f'{tip("If temperature were different", "temp_scn")}</div>',
+                    unsafe_allow_html=True)
         temp_delta = st.slider("Change vs the forecast temperature (°C)",
                                -TEMP_DELTA_MAX_ABS, TEMP_DELTA_MAX_ABS, 0.0, 0.5, key="wi_temp",
                                help="Re-runs the real forecasting model with this temperature change.")
     with c2:
-        st.markdown(f"**{tip('If rooftop solar existed', 'solar')}**", unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size:1.02rem;font-weight:700;color:{PAL["ink"]}">'
+                    f'{tip("If rooftop solar existed", "solar")}</div>', unsafe_allow_html=True)
         solar_on = st.checkbox("Include rooftop solar", key="wi_solar_on",
                                help="An assumed daylight generation curve subtracted from demand. "
                                     "Not something the model learned from data.")
@@ -484,8 +555,9 @@ def render_whatif(B):
     changed = (temp_delta != 0.0) or (solar_on and solar_cap > 0)
     dpk = scn["peak_mw"] - base["peak_mw"]
     dsc = scn["stress_score"] - base["stress_score"]
+    scn_col = stress_c(scn["stress_level"])
 
-    st.markdown("##### What changes")
+    section("What changes")
     m1, m2, m3 = st.columns(3)
     with m1:
         kicker("Expected peak demand", "expected_peak")
@@ -500,49 +572,45 @@ def render_whatif(B):
     with m3:
         kicker("Grid condition", "condition")
         if changed and scn["stress_level"] != base["stress_level"]:
-            big(f"{base['stress_level']} → {scn['stress_level']}", f"score {dsc:+.1f}",
-                STRESS_COLOR[scn["stress_level"]])
+            big(f"{base['stress_level']} → {scn['stress_level']}", f"score {dsc:+.1f}", scn_col)
         else:
             big(scn["stress_level"], f"score {scn['stress_score']:.0f}/100"
-                + (f" ({dsc:+.1f})" if changed else ""), STRESS_COLOR[scn["stress_level"]])
+                + (f" ({dsc:+.1f})" if changed else ""), scn_col)
         chip(f"peak risk {base['peak_risk']} → {scn['peak_risk']}" if
              (changed and scn["peak_risk"] != base["peak_risk"]) else f"peak risk {scn['peak_risk']}",
-             RISK_COLOR[scn["peak_risk"]])
+             risk_c(scn["peak_risk"]))
 
     if changed and scn["peak_risk"] != base["peak_risk"]:
+        rc = risk_c(scn["peak_risk"])
         st.markdown(
-            f'<div style="border-left:5px solid {RISK_COLOR[scn["peak_risk"]]};'
-            f'background:{RISK_COLOR[scn["peak_risk"]]}0d;border-radius:5px;padding:9px 14px;'
-            f'margin:8px 0;font-size:0.9rem">In this scenario the peak risk changes from '
-            f'<b>{base["peak_risk"]}</b> to <b>{scn["peak_risk"]}</b>. '
-            f'{"; ".join(scn["peak_risk_reasons"])}.</div>', unsafe_allow_html=True)
+            f'<div style="border-left:5px solid {rc};background:{rc}{PAL["tint"]};border-radius:6px;'
+            f'padding:10px 15px;margin:10px 0;font-size:0.92rem;color:{PAL["ink"]}">'
+            f'In this scenario the peak risk changes from <b>{base["peak_risk"]}</b> to '
+            f'<b>{scn["peak_risk"]}</b>. {"; ".join(scn["peak_risk_reasons"])}.</div>',
+            unsafe_allow_html=True)
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=base["window"], y=base["p50"], name="Baseline",
-                             line=dict(color=MUTE, width=2, dash="dot"),
+                             line=dict(color=PAL["mute"], width=2, dash="dot"),
                              hovertemplate="%{y:,.0f} MW<extra>baseline</extra>"))
     if scn["solar_mw"] is not None:
         fig.add_trace(go.Scatter(x=scn["window"], y=scn["gross_p50"], name="Scenario before solar",
-                                 line=dict(color=WARN, width=1.6, dash="dash"),
+                                 line=dict(color=PAL["warn"], width=1.6, dash="dash"),
                                  hovertemplate="%{y:,.0f} MW<extra>before solar</extra>"))
     fig.add_trace(go.Scatter(x=scn["window"], y=scn["p50"], name="Scenario",
-                             line=dict(color=FORECAST, width=2.6),
+                             line=dict(color=PAL["fc"], width=2.6),
                              hovertemplate="%{y:,.0f} MW<extra>scenario</extra>"))
-    fig.add_hline(y=ASSUMED_CAPACITY_MW, line_dash="dash", line_color=BAD, opacity=0.4,
+    fig.add_hline(y=ASSUMED_CAPACITY_MW, line_dash="dash", line_color=PAL["bad"], opacity=0.45,
                   annotation_text="modeled capacity (illustrative)", annotation_position="top right",
-                  annotation_font=dict(size=10, color=BAD))
-    fig.update_layout(height=310, margin=dict(l=8, r=8, t=30, b=8), hovermode="x unified",
-                      legend=dict(orientation="h", y=1.17, x=0, font=dict(size=11)),
-                      yaxis_title="MW", xaxis_title=None, plot_bgcolor="white",
-                      paper_bgcolor="white", yaxis=dict(gridcolor=LINE), xaxis=dict(gridcolor=LINE))
-    st.plotly_chart(fig, width="stretch")
+                  annotation_font=dict(size=10, color=PAL["bad"]))
+    st.plotly_chart(chart_layout(fig, 310), width="stretch")
 
     if scn["solar_mw"] is not None:
         st.caption("If the two scenario lines separate around midday and meet again after sunset, "
                    "that is the real effect being shown: solar can flatten daytime demand but cannot "
                    "reduce a peak that happens after dark.")
 
-    with st.expander("Modeled utility-level breakdown for this scenario"):
+    with st.expander("Modeled area-level breakdown for this scenario"):
         discom_block(scn["discoms"])
     with st.expander("Technical detail"):
         st.write(f"- Baseline peak **{base['peak_mw']:,.0f} MW** at {base['peak_time']:%H:%M}, "
@@ -572,11 +640,10 @@ EVENTS = {
 
 
 def render_proof(B):
-    st.markdown(f"##### {tip('Replay a real past event', 'replay')}", unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:0.9rem;color:{INK};margin-bottom:10px">'
-                f'Pick a real day. The system shows the forecast it would have issued 24 hours '
-                f'beforehand, using only what was known at that moment. What actually happened stays '
-                f'hidden until you ask for it.</div>', unsafe_allow_html=True)
+    section("Replay a real past event", "replay",
+            "Pick a real day. The system shows the forecast it would have issued 24 hours "
+            "beforehand, using only what was known at that moment. What actually happened stays "
+            "hidden until you ask for it.")
 
     opts = list(EVENTS) + ["Any other day in the test period…"]
     choice = st.selectbox("Event", opts, key="pf_event")
@@ -598,7 +665,7 @@ def render_proof(B):
     context_strip(f"Forecast issued <b>{r['T']:%d %B %Y, %H:%M}</b> &nbsp;·&nbsp; covering the next "
                   f"24 hours &nbsp;·&nbsp; built only from information available at that moment")
 
-    st.markdown("##### Step 1 — what the system predicted, 24 hours ahead")
+    section("Step 1 — what the system predicted, 24 hours ahead")
     p1, p2, p3, p4 = st.columns(4)
     with p1:
         kicker("Predicted peak", "expected_peak")
@@ -611,9 +678,8 @@ def render_proof(B):
         big(f"{r['p10_at_pred_peak']:,.0f}–{r['p90_at_pred_peak']:,.0f}", "MW (P10–P90)")
     with p4:
         kicker("Forecast reliability", "reliability")
-        big(r["reliability"], None, REL_COLOR[r["reliability"]])
-    st.markdown(f'<div style="font-size:0.88rem;color:{INK};margin-top:4px">'
-                f'{REL_PLAIN[r["reliability"]]}</div>', unsafe_allow_html=True)
+        big(r["reliability"], None, rel_c(r["reliability"]))
+    body(REL_PLAIN[r["reliability"]], "0.9rem")
 
     if r["n_missing"]:
         st.warning(f"{r['n_missing']} of 96 blocks in this window have no recorded actual value "
@@ -630,21 +696,21 @@ def render_proof(B):
         data_notes()
         return
 
-    st.markdown("##### Step 2 — what actually happened")
+    section("Step 2 — what actually happened")
     inside = r["inside_p90_at_actual_peak"]
-    verdict_color = OK if inside else BAD
+    vc = PAL["ok"] if inside else PAL["bad"]
     # peak_abs_err_mw is FORECAST MINUS ACTUAL, so a negative error means the real peak came in
     # ABOVE what was forecast. Stating this backwards would misdescribe the system's own miss.
     err_word = "above" if r["peak_abs_err_mw"] < 0 else "below"
     st.markdown(
-        f'<div style="border-left:6px solid {verdict_color};background:{verdict_color}0d;'
-        f'border-radius:6px;padding:12px 16px;margin-bottom:12px">'
-        # Precise claim: the backend measures this AT THE ACTUAL PEAK BLOCK, not across the whole
-        # window. The chart below often shows the actual outside the band at other hours, so an
-        # unqualified "stayed inside the range" would overstate what was actually verified.
-        f'<div style="font-size:1.05rem;font-weight:700;color:{verdict_color}">'
+        f'<div style="border-left:6px solid {vc};background:{vc}{PAL["tint"]};'
+        f'border-radius:7px;padding:13px 17px;margin-bottom:13px">'
+        # Precise claim: measured AT THE ACTUAL PEAK BLOCK, not across the whole window. The chart
+        # below often shows the actual outside the band at other hours, so an unqualified "stayed
+        # inside the range" would overstate what was actually verified.
+        f'<div style="font-size:1.1rem;font-weight:750;color:{vc}">'
         f'{"At the peak, actual demand stayed inside the predicted range" if inside else "At the peak, actual demand broke through the predicted range"}</div>'
-        f'<div style="font-size:0.93rem;color:{INK};margin-top:4px">'
+        f'<div style="font-size:0.95rem;color:{PAL["ink"]};margin-top:5px">'
         f'Real peak was <b>{r["actual_peak_mw"]:,.0f} MW</b> at {r["actual_peak_time"]:%H:%M} — '
         f'{abs(r["peak_abs_err_mw"]):,.0f} MW ({abs(r["peak_pct_err"]):.1f}%) {err_word} the central '
         f'forecast, with <b>{abs(r["p90_margin_at_actual_peak_mw"]):,.0f} MW '
@@ -657,25 +723,21 @@ def render_proof(B):
     fig.add_trace(go.Scatter(x=win.index, y=win["p90"], line=dict(width=0),
                              showlegend=False, hoverinfo="skip"))
     fig.add_trace(go.Scatter(x=win.index, y=win["p10"], line=dict(width=0), fill="tonexty",
-                             fillcolor="rgba(79,70,229,0.16)", name="Predicted range"))
-    fig.add_trace(go.Scatter(x=win.index, y=win["p50"], name="Forecast",
-                             line=dict(color=FORECAST, width=2.4)))
-    fig.add_trace(go.Scatter(x=win.index, y=win["actual"], name="Actual",
-                             line=dict(color=INK, width=2.2)))
-    fig.add_vline(x=r["T"].to_pydatetime(), line_dash="dot", line_color=MUTE,
-                  annotation_text="forecast issued", annotation_font=dict(size=11, color=MUTE))
-    fig.add_vline(x=r["actual_peak_time"].to_pydatetime(), line_dash="dash", line_color=BAD,
-                  annotation_text="actual peak", annotation_font=dict(size=11, color=BAD))
-    fig.update_layout(height=320, margin=dict(l=8, r=8, t=32, b=8), hovermode="x unified",
-                      legend=dict(orientation="h", y=1.16, x=0, font=dict(size=11)),
-                      yaxis_title="MW", xaxis_title=None, plot_bgcolor="white",
-                      paper_bgcolor="white", yaxis=dict(gridcolor=LINE), xaxis=dict(gridcolor=LINE))
-    st.plotly_chart(fig, width="stretch")
+                             fillcolor=PAL["band"], name="Predicted range", legendrank=3))
+    fig.add_trace(go.Scatter(x=win.index, y=win["p50"], name="Forecast", legendrank=2,
+                             line=dict(color=PAL["fc"], width=2.4)))
+    fig.add_trace(go.Scatter(x=win.index, y=win["actual"], name="Actual", legendrank=1,
+                             line=dict(color=PAL["hist"], width=2.2)))
+    fig.add_vline(x=r["T"].to_pydatetime(), line_dash="dot", line_color=PAL["mute"],
+                  annotation_text="forecast issued", annotation_font=dict(size=11, color=PAL["mute"]))
+    fig.add_vline(x=r["actual_peak_time"].to_pydatetime(), line_dash="dash", line_color=PAL["bad"],
+                  annotation_text="actual peak", annotation_font=dict(size=11, color=PAL["bad"]))
+    st.plotly_chart(chart_layout(fig, 320), width="stretch")
     inside_pct = float(((win["actual"] >= win["p10"]) & (win["actual"] <= win["p90"])).mean() * 100)
     st.caption(f"The verdict above is measured at the peak — the moment that matters most for "
                f"planning. Across the whole 24-hour window, actual demand fell inside the predicted "
-               f"range for {inside_pct:.0f}% of blocks; where the black line sits above the band, the "
-               f"forecast was running low at that hour.")
+               f"range for {inside_pct:.0f}% of blocks; where the actual line sits above the band, "
+               f"the forecast was running low at that hour.")
 
     with st.expander("Technical detail"):
         st.write(f"- Issue time T: **{r['T']}** — leakage assertion passed "
@@ -704,17 +766,14 @@ def render_proof(B):
 # MAIN
 # ============================================================================
 def main():
+    resolve_palette()
+
     h1, h2 = st.columns([2.2, 1])
     with h1:
-        st.markdown(
-            f'<div style="font-size:1.5rem;font-weight:800;color:{INK};letter-spacing:-.01em">'
-            f'Delhi Peak Intelligence</div>'
-            f'<div style="font-size:0.87rem;color:{MUTE};margin-top:-2px">'
-            f'Day-ahead electricity demand and grid-risk decision support</div>',
-            unsafe_allow_html=True)
+        page_title()
     with h2:
         st.markdown(
-            f'<div style="text-align:right;font-size:0.76rem;color:{MUTE};padding-top:10px">'
+            f'<div style="text-align:right;font-size:0.78rem;color:{PAL["mute"]};padding-top:14px">'
             f'<span title="{G["historical"]}">Recorded data · 1 May – 30 Jun 2025 ⓘ</span><br>'
             f'<span title="{G["forecast"]}">Forecasts issued 24 h ahead ⓘ</span></div>',
             unsafe_allow_html=True)
