@@ -1,0 +1,9 @@
+# Repo-root Streamlit config. Streamlit reads .streamlit/config.toml relative to the working
+# directory the app is launched from -- on Streamlit Community Cloud that is the REPO ROOT, so a
+# copy living only in src/ would be ignored. This mirrors src/.streamlit/config.toml.
+# Operational only: no effect on forecasting logic, UI content or any locked behaviour.
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false

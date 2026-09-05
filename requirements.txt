@@ -1,0 +1,8 @@
+# PowerWatch (Delhi DEMO) -- deployment dependencies.
+# Streamlit Community Cloud looks for a file named exactly "requirements.txt" at the repo root;
+# requirements_dashboard.txt is NOT auto-detected, which is why this file exists.
+# Floors match the versions the dashboard was actually built and tested against.
+streamlit>=1.60
+plotly>=6.0
+pandas>=2.0
+numpy>=1.24

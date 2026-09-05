@@ -1,0 +1,20 @@
+# virtual environment -- never commit this
+.venv/
+venv/
+env/
+
+# python bytecode
+__pycache__/
+*.py[cod]
+
+# streamlit secrets (never commit credentials)
+.streamlit/secrets.toml
+
+# local environment-debug scratch files
+_envcheck.txt
+_piperr.txt
+_pipfix.txt
+_pipout.txt
+_status.txt
+_verify_env.py
+*.log
