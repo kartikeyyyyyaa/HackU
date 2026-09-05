@@ -4,15 +4,18 @@
 
 Built for **Origin Hackathon PS-1: AI-based Electricity Demand Prediction System**.
 
+### 🚀 [**Try it live → powerwatch-delhi.streamlit.app**](https://powerwatch-delhi.streamlit.app/)
+
+*No install, no signup. Pick any day, drag the temperature slider, or open Proof Mode and replay a real Delhi peak.*
+
+[![Live demo](https://img.shields.io/badge/▶_live_demo-powerwatch--delhi.streamlit.app-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://powerwatch-delhi.streamlit.app/)
+
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.60+-FF4B4B?logo=streamlit&logoColor=white)
 ![Status](https://img.shields.io/badge/status-demo%20ready-success)
 ![Data](https://img.shields.io/badge/data-real%20Delhi%20SLDC-informational)
-![Live demo](https://img.shields.io/badge/live%20demo-not%20yet%20deployed-lightgrey)
 
-<!-- Add the Streamlit Cloud URL here once deployed -->
-
-![PowerWatch Overview](docs/overview.png)
+[![PowerWatch Overview](docs/overview.png)](https://powerwatch-delhi.streamlit.app/)
 
 ---
 
@@ -110,6 +113,8 @@ The model called the **exact 15-minute block** of the peak a day early, under-fo
 
 The second built-in event is **11 June 2025 — the forecast's worst miss**, where actual demand broke *through* the band by 247 MW. Included on purpose.
 
+▶ **[Replay it yourself](https://powerwatch-delhi.streamlit.app/)** — open the live app, go to Proof Mode, and hit reveal.
+
 ---
 
 ## 🌡️ What-If scenarios
@@ -125,6 +130,10 @@ Rooftop solar is modelled as a disclosed half-sine daylight curve subtracted *af
 ---
 
 ## Quick start
+
+**Fastest route — [open the live app](https://powerwatch-delhi.streamlit.app/).** Nothing to install.
+
+To run it locally:
 
 ```bash
 git clone https://github.com/kartikeyyyyyaa/HackU.git
@@ -246,7 +255,7 @@ Data: Delhi SLDC 5-minute load data · Open-Meteo ERA5 archive (observed) · Ope
 
 ## Author
 
-**Kartikeya Shukla** — Origin Hackathon, PS-1.
+**TEAM HackU** — Origin Hackathon, PS-1.
 
 ---
 
