@@ -11,11 +11,11 @@ backend edits behind this file at all -- phase13_backend.py is byte-identical to
 the version approved in Phase 13/14, and phase13_dashboard_app.py (V1) is left
 untouched and still runnable as a fallback.
 
-THEMING: every colour is resolved per render from the viewer's actual theme
-(st.context.theme). The dashboard is readable in both light and dark mode; no
-text colour is hardcoded to one theme. If theme detection is ever unavailable
-the palette falls back to light and body text still inherits, so nothing can
-become invisible.
+THEMING: the dashboard is theme-AGNOSTIC. Body text inherits Streamlit's own
+text colour and surfaces are neutral grey tints, so switching Light/Dark from the
+app menu recolours everything instantly -- no rerun, no refresh. Nothing here
+reads st.context.theme, because Streamlit repaints its chrome without re-running
+the script, which would leave any server-baked colour one theme behind.
 
 Honesty rules preserved verbatim:
   - Runs on HISTORICAL data (approved test period 1 May - 30 Jun 2025). Never
@@ -53,27 +53,47 @@ st.set_page_config(page_title=f"{APP_NAME} (Delhi DEMO)", layout="wide",
 
 
 # ============================================================================
-# THEME-AWARE PALETTE
-# Resolved per render from the viewer's real theme. Semantic colours are tuned
-# separately for each theme so that a status is legible either way; body text is
-# never pinned to a single theme's colour.
+# THEME-AGNOSTIC PALETTE
+#
+# An earlier version resolved the palette per render from st.context.theme. That
+# was wrong: Streamlit repaints its own chrome the instant a viewer switches
+# Light/Dark from the app menu, but it does NOT re-run the script, so every
+# colour we had baked into inline HTML stayed on the previous theme until a
+# manual refresh -- dark text on a dark page, light text on a light page.
+# Streamlit 1.63 exposes no CSS custom properties and no data-theme attribute to
+# key off either, so there is nothing to react to client-side.
+#
+# The fix is to need no theme knowledge at all:
+#   - body text INHERITS Streamlit's own text colour, so it always follows the
+#     live theme with no rerun;
+#   - surfaces are neutral grey tints that read as a raised card on either
+#     background;
+#   - semantic colours are mid-tones chosen to stay legible on both.
 # ============================================================================
-LIGHT = dict(ink="#0f172a", mute="#5b6678", line="#e2e8f0", surf="#f8fafc",
-             ok="#15803d", warn="#b45309", bad="#b91c1c", worst="#7c2d12",
-             fc="#4f46e5", hist="#0f172a", band="rgba(79,70,229,0.16)", tint="14")
-DARK = dict(ink="#e8eefb", mute="#9fadc4", line="#2c3547", surf="#151a24",
-            ok="#4ade80", warn="#fbbf24", bad="#f87171", worst="#fb923c",
-            fc="#8b96f8", hist="#e8eefb", band="rgba(139,150,248,0.24)", tint="26")
-PAL = LIGHT
+INK   = "inherit"                     # follow Streamlit's live theme text colour
+SURF  = "rgba(128,128,128,0.10)"      # raised card, neutral on light and dark
+SURF2 = "rgba(128,128,128,0.16)"      # secondary surface
+LINE  = "rgba(128,128,128,0.22)"      # hairline border
+MUTE_OPACITY = "0.68"                 # secondary text = inherited colour, dimmed
+
+OK    = "#16A34A"   # NORMAL
+WARN  = "#D97706"   # WATCH
+BAD   = "#DC2626"   # HIGH
+WORST = "#991B1B"   # CRITICAL
+FC    = "#6366F1"   # forecast / P50
+HIST  = "#6B7280"   # observed history: deliberately neutral -- context, not subject
+BAND  = "rgba(99,102,241,0.20)"
+CHART_TEXT = "#8B93A5"                # axis labels, legible on both themes
+CHART_GRID = "rgba(128,128,128,0.25)"
+TINT  = "1A"                          # alpha suffix for tinted status panels
+
+PAL = dict(ink=INK, mute=INK, line=LINE, surf=SURF, ok=OK, warn=WARN, bad=BAD,
+           worst=WORST, fc=FC, hist=HIST, band=BAND, tint=TINT)
 
 
-def resolve_palette():
-    global PAL
-    try:
-        PAL = DARK if st.context.theme.type == "dark" else LIGHT
-    except Exception:      # detection unavailable -> safe, readable default
-        PAL = LIGHT
-    return PAL
+def muted(text, size="0.88rem", extra=""):
+    """Secondary text: inherits the live theme colour, just dimmed."""
+    return (f'<span style="opacity:{MUTE_OPACITY};font-size:{size};{extra}">{text}</span>')
 
 
 STRESS_DOT = {"NORMAL": "🟢", "WATCH": "🟡", "HIGH": "🔴", "CRITICAL": "🔴"}
@@ -150,8 +170,8 @@ G = {
 
 def tip(text, key):
     """Label with a hover explanation. Native browser tooltip -- no framework."""
-    return (f'<span title="{G[key]}" style="border-bottom:1px dotted {PAL["mute"]};cursor:help">'
-            f'{text}</span> <span style="color:{PAL["mute"]};font-size:0.8em" title="{G[key]}">ⓘ</span>')
+    return (f'<span title="{G[key]}" style="border-bottom:1px dotted currentColor;cursor:help">'
+            f'{text}</span> <span style="color:inherit;opacity:0.68;font-size:0.8em" title="{G[key]}">ⓘ</span>')
 
 
 # ---------------------------------------------------------------- typography
@@ -163,7 +183,7 @@ def page_title():
         f'<span style="background:{PAL["fc"]}{PAL["tint"]};color:{PAL["fc"]};'
         f'border:1px solid {PAL["fc"]}66;padding:2px 9px;border-radius:11px;'
         f'font-size:0.7rem;font-weight:800;letter-spacing:.09em">{APP_TAG}</span></div>'
-        f'<div style="font-size:0.95rem;color:{PAL["mute"]};margin-top:1px">'
+        f'<div style="font-size:0.95rem;color:inherit;opacity:0.68;margin-top:1px">'
         f'Day-ahead electricity demand and grid-risk decision support</div>',
         unsafe_allow_html=True)
 
@@ -174,7 +194,7 @@ def section(title, key=None, sub=None):
     st.markdown(
         f'<div style="font-size:1.22rem;font-weight:750;color:{PAL["ink"]};'
         f'letter-spacing:-.01em;margin:20px 0 0 0">{label}</div>'
-        + (f'<div style="font-size:0.88rem;color:{PAL["mute"]};margin:2px 0 10px 0">{sub}</div>'
+        + (f'<div style="font-size:0.88rem;color:inherit;opacity:0.68;margin:2px 0 10px 0">{sub}</div>'
            if sub else '<div style="height:9px"></div>'),
         unsafe_allow_html=True)
 
@@ -182,7 +202,7 @@ def section(title, key=None, sub=None):
 def kicker(text, key=None):
     body = tip(text, key) if key else text
     st.markdown(f'<div style="font-size:0.73rem;letter-spacing:.07em;text-transform:uppercase;'
-                f'color:{PAL["mute"]};font-weight:700;margin-bottom:3px">{body}</div>',
+                f'color:inherit;opacity:0.68;font-weight:700;margin-bottom:3px">{body}</div>',
                 unsafe_allow_html=True)
 
 
@@ -190,7 +210,7 @@ def big(value, sub=None, color=None):
     c = color or PAL["ink"]
     st.markdown(f'<div style="font-size:1.95rem;font-weight:750;color:{c};line-height:1.12">'
                 f'{value}</div>' +
-                (f'<div style="font-size:0.81rem;color:{PAL["mute"]};margin-top:2px">{sub}</div>'
+                (f'<div style="font-size:0.81rem;color:inherit;opacity:0.68;margin-top:2px">{sub}</div>'
                  if sub else ""), unsafe_allow_html=True)
 
 
@@ -272,19 +292,19 @@ def stress_components(B, state):
 def context_strip(line):
     st.markdown(
         f'<div style="background:{PAL["surf"]};border:1px solid {PAL["line"]};border-radius:7px;'
-        f'padding:7px 13px;font-size:0.83rem;color:{PAL["mute"]};margin-bottom:14px">{line}</div>',
+        f'padding:7px 13px;font-size:0.83rem;color:inherit;opacity:0.68;margin-bottom:14px">{line}</div>',
         unsafe_allow_html=True)
 
 
 def chart_layout(fig, height=330):
     fig.update_layout(
         height=height, margin=dict(l=8, r=8, t=34, b=8), hovermode="x unified",
-        legend=dict(orientation="h", y=1.16, x=0, font=dict(size=11, color=PAL["ink"])),
+        legend=dict(orientation="h", y=1.16, x=0, font=dict(size=11, color=CHART_TEXT)),
         yaxis_title="MW", xaxis_title=None,
         plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=PAL["ink"]),
-        yaxis=dict(gridcolor=PAL["line"], zerolinecolor=PAL["line"], color=PAL["mute"]),
-        xaxis=dict(gridcolor=PAL["line"], zerolinecolor=PAL["line"], color=PAL["mute"]))
+        font=dict(color=CHART_TEXT),
+        yaxis=dict(gridcolor=CHART_GRID, zerolinecolor=CHART_GRID, color=CHART_TEXT),
+        xaxis=dict(gridcolor=CHART_GRID, zerolinecolor=CHART_GRID, color=CHART_TEXT))
     return fig
 
 
@@ -425,13 +445,13 @@ def render_overview(B):
                                  hovertemplate="%{y:,.0f} MW<extra>actual</extra>"))
     fig.add_trace(go.Scatter(x=[peak], y=[state["p50"]], mode="markers+text",
                              marker=dict(color=sc_col, size=11,
-                                         line=dict(color=PAL["surf"], width=2)),
+                                         line=dict(color=CHART_GRID, width=2)),
                              text=[f"  peak {state['p50']:,.0f} MW"], textposition="top center",
                              textfont=dict(color=sc_col, size=12), showlegend=False,
                              hoverinfo="skip"))
-    fig.add_vline(x=now.to_pydatetime(), line_dash="dot", line_color=PAL["mute"],
+    fig.add_vline(x=now.to_pydatetime(), line_dash="dot", line_color=CHART_TEXT,
                   annotation_text="forecast issued", annotation_position="top left",
-                  annotation_font=dict(size=11, color=PAL["mute"]))
+                  annotation_font=dict(size=11, color=CHART_TEXT))
     fig.add_hline(y=ASSUMED_CAPACITY_MW, line_dash="dash", line_color=PAL["bad"], opacity=0.5,
                   annotation_text=f"modeled capacity {ASSUMED_CAPACITY_MW:,.0f} MW (illustrative)",
                   annotation_position="top right", annotation_font=dict(size=10, color=PAL["bad"]))
@@ -454,12 +474,12 @@ def render_overview(B):
         section("What to pay attention to")
         for adv in B.recommend(state):
             st.markdown(
-                f'<div style="border:1px solid {PAL["line"]};border-left:4px solid {PAL["mute"]};'
+                f'<div style="border:1px solid {PAL["line"]};border-left:4px solid rgba(128,128,128,0.45);'
                 f'background:{PAL["surf"]};border-radius:6px;padding:9px 13px;margin-bottom:8px">'
                 f'<div style="font-weight:800;font-size:0.82rem;letter-spacing:.04em;'
                 f'color:{PAL["ink"]}">{adv["category"]}</div>'
                 f'<div style="font-size:0.93rem;color:{PAL["ink"]};margin:3px 0">{adv["advisory"]}</div>'
-                f'<div style="font-size:0.79rem;color:{PAL["mute"]}">Why: {adv["reason"]}</div></div>',
+                f'<div style="font-size:0.79rem;color:inherit;opacity:0.68">Why: {adv["reason"]}</div></div>',
                 unsafe_allow_html=True)
         st.caption("Generated by a fixed rule set from the numbers above — not free-form AI text.")
     with b:
@@ -591,7 +611,7 @@ def render_whatif(B):
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=base["window"], y=base["p50"], name="Baseline",
-                             line=dict(color=PAL["mute"], width=2, dash="dot"),
+                             line=dict(color=CHART_TEXT, width=2, dash="dot"),
                              hovertemplate="%{y:,.0f} MW<extra>baseline</extra>"))
     if scn["solar_mw"] is not None:
         fig.add_trace(go.Scatter(x=scn["window"], y=scn["gross_p50"], name="Scenario before solar",
@@ -728,8 +748,8 @@ def render_proof(B):
                              line=dict(color=PAL["fc"], width=2.4)))
     fig.add_trace(go.Scatter(x=win.index, y=win["actual"], name="Actual", legendrank=1,
                              line=dict(color=PAL["hist"], width=2.2)))
-    fig.add_vline(x=r["T"].to_pydatetime(), line_dash="dot", line_color=PAL["mute"],
-                  annotation_text="forecast issued", annotation_font=dict(size=11, color=PAL["mute"]))
+    fig.add_vline(x=r["T"].to_pydatetime(), line_dash="dot", line_color=CHART_TEXT,
+                  annotation_text="forecast issued", annotation_font=dict(size=11, color=CHART_TEXT))
     fig.add_vline(x=r["actual_peak_time"].to_pydatetime(), line_dash="dash", line_color=PAL["bad"],
                   annotation_text="actual peak", annotation_font=dict(size=11, color=PAL["bad"]))
     st.plotly_chart(chart_layout(fig, 320), width="stretch")
@@ -766,14 +786,12 @@ def render_proof(B):
 # MAIN
 # ============================================================================
 def main():
-    resolve_palette()
-
     h1, h2 = st.columns([2.2, 1])
     with h1:
         page_title()
     with h2:
         st.markdown(
-            f'<div style="text-align:right;font-size:0.78rem;color:{PAL["mute"]};padding-top:14px">'
+            f'<div style="text-align:right;font-size:0.78rem;color:inherit;opacity:0.68;padding-top:14px">'
             f'<span title="{G["historical"]}">Recorded data · 1 May – 30 Jun 2025 ⓘ</span><br>'
             f'<span title="{G["forecast"]}">Forecasts issued 24 h ahead ⓘ</span></div>',
             unsafe_allow_html=True)
